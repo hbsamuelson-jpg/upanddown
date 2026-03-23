@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>Up & Down the River</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(ellipse at 50% 0%,#1a4a2e 0%,#0a1f14 60%,#060f0a 100%);min-height:100vh;color:#f0e6d3;overscroll-behavior:none}
+.screen{display:none;padding:14px 14px 40px;align-items:center;flex-direction:column}
+.screen.active{display:flex}
+.card{background:rgba(10,31,20,0.9);border:1px solid #1a4a2e;border-radius:20px;padding:22px 18px;width:100%;max-width:430px;margin-bottom:12px}
+.title{font-size:22px;font-weight:700;text-align:center;color:#d4af37;margin-bottom:3px;letter-spacing:.3px}
+.sub{font-size:13px;color:#5a8a6a;text-align:center;margin-bottom:18px}
+.lbl{font-size:11px;color:#5a8a6a;letter-spacing:1px;margin-bottom:8px;text-transform:uppercase}
+input[type=text]{width:100%;padding:12px 14px;font-size:16px;border:1px solid #1a4a2e;border-radius:12px;background:#06160d;color:#f0e6d3;margin-bottom:8px;outline:none}
+.btn{width:100%;padding:15px;font-size:16px;font-weight:700;cursor:pointer;border-radius:14px;border:none;background:linear-gradient(135deg,#d4af37,#b8962e);color:#060f0a;margin-top:12px;letter-spacing:.2px}
+.btn-disabled{width:100%;padding:15px;font-size:16px;font-weight:700;border-radius:14px;border:1px solid #1a3a2a;background:#0a1a10;color:#2a5a35;margin-top:12px;cursor:not-allowed}
+.btn-ghost{width:100%;padding:13px;font-size:15px;font-weight:600;cursor:pointer;border-radius:14px;border:1px solid #1a4a2e;background:transparent;color:#5a8a6a;margin-top:8px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid #0e2a1c}
+.row:last-child{border-bottom:none}
+.infobox{background:#06160d;border:1px solid #1a4a2e;border-radius:14px;padding:14px 16px;margin-bottom:14px}
+.notice-warn{background:#1a0e00;border:1px solid #7a4a00;border-radius:10px;padding:10px 14px;font-size:13px;color:#c8883a;margin-bottom:12px;text-align:center}
+.notice-info{background:#0a1020;border:1px solid #1a3a6a;border-radius:10px;padding:10px 14px;font-size:13px;color:#5a9acc;margin-bottom:12px;text-align:center}
+.notice-ok{background:#0a1f0a;border:1px solid #1a5a1a;border-radius:10px;padding:10px 14px;font-size:13px;color:#7ec8a0;margin-bottom:0;text-align:center;margin-top:10px}
+.pips{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:16px}
+.pip{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0;transition:all .2s}
+.bid-grid{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:16px 0}
+.bid-btn{width:56px;height:56px;border-radius:50%;font-size:22px;font-weight:bold;background:linear-gradient(145deg,#1a4a2e,#0e2a1c);color:#f0e6d3;border:1px solid #2a6040;cursor:pointer;position:relative}
+.bid-btn:disabled{background:#060f0a;color:#1a3a2a;border-color:#0e1a14;cursor:not-allowed}
+.cnt-row{display:flex;justify-content:space-between;align-items:center;padding:13px 0;border-bottom:1px solid #0e2a1c}
+.cnt-row:last-child{border-bottom:none}
+.cnt-btn{width:38px;height:38px;border-radius:10px;background:#06160d;color:#f0e6d3;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;border:1px solid #1a4a2e}
+.cnt-btn.off{border-color:#0e1a14;background:#060f0a;color:#1a3a2a;cursor:not-allowed}
+.cnt-val{font-size:28px;font-weight:bold;min-width:28px;text-align:center}
+.badge{display:inline-block;padding:5px 16px;border-radius:20px;font-size:13px;border:1px solid #1a4a2e;color:#5a8a6a;margin-bottom:14px}
+.badge.done{border-color:#2d6a4f;color:#7ec8a0;background:rgba(45,106,79,.15)}
+.winner-box{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:16px;padding:20px;text-align:center;margin-bottom:20px}
+.code-big{font-size:52px;font-weight:700;color:#d4af37;text-align:center;letter-spacing:10px;margin:10px 0;cursor:pointer}
+.divider{display:flex;align-items:center;gap:10px;margin:14px 0;color:#2a6040;font-size:13px}
+.divider::before,.divider::after{content:'';flex:1;border-top:1px solid #1a4a2e}
+.waiting{font-size:14px;color:#5a8a6a;text-align:center;padding:10px 0;margin-top:6px}
+.err{color:#c44444;font-size:13px;text-align:center;margin-top:8px;min-height:18px}
+.you{color:#5a8a6a;font-size:11px;margin-left:4px}
+</style>
+</head>
+<body>
+
+<!-- LANDING -->
+<div id="s-landing" class="screen active">
+  <div class="card" style="margin-top:20px">
+    <div style="font-size:42px;text-align:center;margin-bottom:6px">🃏</div>
+    <div class="title">Up & Down the River</div>
+    <div class="sub">online multiplayer</div>
+    <div class="lbl">your name</div>
+    <input id="my-name" type="text" placeholder="Enter your name" style="text-transform:none"/>
+    <button class="btn" onclick="createGame()">Create New Game</button>
+    <div class="divider">or join existing</div>
+    <div class="lbl">game code</div>
+    <input id="join-code" type="text" placeholder="A B C D" maxlength="4"
+      style="font-size:30px;font-weight:700;letter-spacing:8px;text-align:center;text-transform:uppercase"/>
+    <button class="btn-ghost" onclick="joinGame()">Join Game →</button>
+    <div class="err" id="err"></div>
+  </div>
+</div>
+
+<!-- LOBBY -->
+<div id="s-lobby" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="title">Waiting Room</div>
+    <div class="sub">share this code with everyone</div>
+    <div class="code-big" id="lob-code" title="tap to copy"></div>
+    <div class="notice-info" style="margin-bottom:16px">Tap the code to copy it to clipboard</div>
+    <div class="lbl">players</div>
+    <div id="lob-players"></div>
+    <div id="lob-actions"></div>
+  </div>
+</div>
+
+<!-- ROUND INTRO -->
+<div id="s-roundIntro" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="title" id="ri-title"></div>
+    <div class="sub">of 15</div>
+    <div class="pips" id="ri-pips"></div>
+    <div style="text-align:center;margin:10px 0 18px">
+      <div style="font-size:60px;font-weight:700;color:#d4af37;line-height:1" id="ri-cards"></div>
+      <div style="color:#5a8a6a;font-size:14px;margin-top:4px">cards per player</div>
+    </div>
+    <div class="notice-info">🃏 Flip a card from the remaining deck to set trump suit</div>
+    <div class="infobox">
+      <div class="row"><span style="color:#5a8a6a;font-size:14px">Dealer</span><span style="color:#d4af37;font-weight:bold" id="ri-dealer"></span></div>
+      <div class="row" style="border:none;padding-bottom:0"><span style="color:#5a8a6a;font-size:14px">Bids first</span><span style="font-weight:bold" id="ri-first"></span></div>
+    </div>
+    <div class="lbl">scores</div>
+    <div id="ri-scores"></div>
+    <div id="ri-actions"></div>
+  </div>
+</div>
+
+<!-- BIDDING -->
+<div id="s-bidding" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="title">Bidding</div>
+    <div class="sub" id="bid-sub"></div>
+    <div id="bid-notice"></div>
+    <div id="bid-main"></div>
+    <div id="bid-log"></div>
+  </div>
+</div>
+
+<!-- TRICKS -->
+<div id="s-tricks" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="title">Tricks Won</div>
+    <div style="text-align:center"><span class="badge" id="tr-badge"></span></div>
+    <div id="tr-rows"></div>
+    <div id="tr-actions"></div>
+  </div>
+</div>
+
+<!-- SUMMARY -->
+<div id="s-summary" class="screen">
+  <div class="card" style="margin-top:16px">
+    <div class="title" id="sum-title"></div>
+    <div class="sub" id="sum-sub"></div>
+    <div id="sum-rows"></div>
+    <div style="margin-top:12px">
+      <div class="lbl">leaderboard</div>
+      <div id="sum-board"></div>
+    </div>
+    <div id="sum-actions"></div>
+  </div>
+</div>
+
+<!-- GAME OVER -->
+<div id="s-gameover" class="screen">
+  <div class="card" style="margin-top:20px;text-align:center">
+    <div style="font-size:54px;margin-bottom:6px">🏆</div>
+    <div class="title">Game Over!</div>
+    <div class="winner-box" style="margin-top:16px">
+      <div style="font-size:12px;color:#5a8a6a;letter-spacing:1px;margin-bottom:6px">WINNER</div>
+      <div style="font-size:30px;font-weight:bold;color:#d4af37" id="go-winner"></div>
+      <div style="font-size:18px;margin-top:4px" id="go-pts"></div>
+    </div>
+    <div id="go-board" style="text-align:left"></div>
+    <button class="btn" onclick="leaveGame()">New Game</button>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+
+<script>
+// ╔══════════════════════════════════════════════════════════════╗
+// ║  PASTE YOUR FIREBASE CONFIG HERE — see setup instructions   ║
+// ╚══════════════════════════════════════════════════════════════╝
+const firebaseConfig = {
+  apiKey:            "AIzaSyCZ56lO86syq6KcltF1mNgyomH67gUuUmk",
+  authDomain:        "upanddown-4be35.firebaseapp.com",
+  databaseURL:       "https://upanddown-4be35-default-rtdb.firebaseio.com",
+  projectId:         "upanddown-4be35",
+  storageBucket:     "upanddown-4be35.firebasestorage.app",
+  messagingSenderId: "885435971077",
+  appId:             "1:885435971077:web:9fc850d3b3ffeb56c7ce6c"
+};
+// ══════════════════════════════════════════════════════════════
+
+const ROUNDS=[8,7,6,5,4,3,2,1,2,3,4,5,6,7,8];
+const MEDALS=['🥇','🥈','🥉','4th','5th','6th','7th','8th'];
+
+try { firebase.initializeApp(firebaseConfig); } catch(e){}
+const db = firebase.database();
+
+// session identity
+let myId = sessionStorage.getItem('udtr_id');
+if(!myId){ myId=Math.random().toString(36).slice(2,10); sessionStorage.setItem('udtr_id',myId); }
+let myName='', gameCode='', gameRef=null, gs={};
+
+function amHost(){ return gs && gs.hostId===myId; }
+
+// ── screen nav ─────────────────────────────────────────────────
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  window.scrollTo(0,0);
+}
+function err(msg){ const e=document.getElementById('err'); e.textContent=msg; setTimeout(()=>e.textContent='',3000); }
+
+// ── Firebase helpers ──────────────────────────────────────────
+function subscribe(){
+  if(gameRef) gameRef.off();
+  gameRef = db.ref('games/'+gameCode);
+  gameRef.on('value', snap=>{
+    const s=snap.val(); if(!s) return;
+    gs=s; render(s);
+  });
+}
+
+function upd(obj){ return db.ref('games/'+gameCode).update(obj); }
+
+// ── game code generator ────────────────────────────────────────
+function genCode(){
+  const C='ABCDEFGHJKLMNPQRSTUVWXYZ';
+  return [0,0,0,0].map(()=>C[Math.floor(Math.random()*C.length)]).join('');
+}
+
+// ── scoring ────────────────────────────────────────────────────
+function calcScore(bid,w){
+  if(w===bid) return 10+2*bid;
+  if(w>bid) return w;
+  return 0;
+}
+
+// ── bid order ──────────────────────────────────────────────────
+function bidOrder(s){
+  const o=s.playerOrder, n=o.length, res=[];
+  for(let i=1;i<=n;i++) res.push(o[(s.dealerIdx+i)%n]);
+  return res;
+}
+
+function currentBidder(s){ return bidOrder(s)[s.bidStep]; }
+
+function restrictedBid(s){
+  const cc=ROUNDS[s.roundIdx], n=s.playerOrder.length;
+  if(cc<=3 || s.bidStep!==n-1) return null;
+  const total=s.playerOrder.reduce((sum,id)=>{ const b=(s.bids||{})[id]; return sum+(b>=0?b:0); },0);
+  const r=cc-total;
+  return(r>=0&&r<=cc)?r:null;
+}
+
+// ╔══════════════════════════════════════════════════════╗
+// ║  ACTIONS                                             ║
+// ╚══════════════════════════════════════════════════════╝
+
+async function createGame(){
+  myName=document.getElementById('my-name').value.trim();
+  if(!myName){ err('Enter your name'); return; }
+  let code=genCode();
+  let snap=await db.ref('games/'+code).once('value');
+  while(snap.exists()){ code=genCode(); snap=await db.ref('games/'+code).once('value'); }
+  gameCode=code;
+  sessionStorage.setItem('udtr_code',code);
+  sessionStorage.setItem('udtr_name',myName);
+  const bids={[myId]:-1}, won={[myId]:0};
+  await db.ref('games/'+code).set({
+    hostId:myId, phase:'lobby',
+    playerOrder:[myId], roundIdx:0, dealerIdx:0, bidStep:0,
+    players:{[myId]:{name:myName,score:0}},
+    bids, won, lastBids:{}, lastWon:{}, lastScores:{}
+  });
+  subscribe();
+}
+
+async function joinGame(){
+  myName=document.getElementById('my-name').value.trim();
+  const code=document.getElementById('join-code').value.trim().toUpperCase();
+  if(!myName){ err('Enter your name'); return; }
+  if(code.length!==4){ err('Enter the 4-letter code'); return; }
+  const snap=await db.ref('games/'+code).once('value');
+  if(!snap.exists()){ err('Game not found — check the code'); return; }
+  const g=snap.val();
+  if(g.phase!=='lobby'){ err('That game already started'); return; }
+  if((g.playerOrder||[]).length>=8){ err('Game is full (8 players max)'); return; }
+  gameCode=code;
+  sessionStorage.setItem('udtr_code',code);
+  sessionStorage.setItem('udtr_name',myName);
+  const newOrder=[...(g.playerOrder||[]),myId];
+  await db.ref('games/'+code).update({
+    playerOrder:newOrder,
+    [`players/${myId}`]:{name:myName,score:0},
+    [`bids/${myId}`]:-1,
+    [`won/${myId}`]:0
+  });
+  subscribe();
+}
+
+async function startGame(){
+  const o=gs.playerOrder, bids={}, won={};
+  o.forEach(id=>{ bids[id]=-1; won[id]=0; });
+  await upd({phase:'roundIntro',bids,won,bidStep:0});
+}
+
+async function startBidding(){
+  const o=gs.playerOrder, bids={};
+  o.forEach(id=>{ bids[id]=-1; });
+  await upd({phase:'bidding',bidStep:0,bids});
+}
+
+async function placeBid(val){
+  const o=gs.playerOrder, n=o.length, newStep=gs.bidStep+1;
+  const changes={[`bids/${myId}`]:val};
+  if(newStep>=n){
+    const won={};
+    o.forEach(id=>{ won[id]=0; });
+    changes.phase='tricks'; changes.won=won;
+  } else {
+    changes.bidStep=newStep;
+  }
+  await upd(changes);
+}
+
+async function changeWon(delta){
+  const cc=ROUNDS[gs.roundIdx];
+  const wonObj=gs.won||{};
+  const total=Object.values(wonObj).reduce((a,b)=>a+b,0);
+  const mine=wonObj[myId]||0;
+  if(delta>0&&total>=cc) return;
+  if(delta<0&&mine<=0) return;
+  await db.ref(`games/${gameCode}/won/${myId}`).set(mine+delta);
+}
+
+async function finishRound(){
+  const o=gs.playerOrder;
+  const lB={...gs.bids}, lW={...gs.won}, lS={};
+  const changes={phase:'summary',lastBids:lB,lastWon:lW};
+  o.forEach(id=>{
+    const s=calcScore(gs.bids[id],gs.won[id]);
+    lS[id]=s;
+    changes[`players/${id}/score`]=(gs.players[id].score||0)+s;
+  });
+  changes.lastScores=lS;
+  await upd(changes);
+}
+
+async function nextRound(){
+  if(gs.roundIdx===14){ await upd({phase:'gameover'}); return; }
+  const o=gs.playerOrder, nr=gs.roundIdx+1, nd=(gs.dealerIdx+1)%o.length;
+  const bids={},won={};
+  o.forEach(id=>{ bids[id]=-1; won[id]=0; });
+  await upd({phase:'roundIntro',roundIdx:nr,dealerIdx:nd,bidStep:0,bids,won});
+}
+
+function leaveGame(){
+  if(gameRef) gameRef.off();
+  sessionStorage.removeItem('udtr_code');
+  show('landing');
+}
+
+// ╔══════════════════════════════════════════════════════╗
+// ║  RENDER                                              ║
+// ╚══════════════════════════════════════════════════════╝
+
+function render(s){
+  switch(s.phase){
+    case 'lobby':      rLobby(s);      show('lobby');      break;
+    case 'roundIntro': rRoundIntro(s); show('roundIntro'); break;
+    case 'bidding':    rBidding(s);    show('bidding');    break;
+    case 'tricks':     rTricks(s);     show('tricks');     break;
+    case 'summary':    rSummary(s);    show('summary');    break;
+    case 'gameover':   rGameOver(s);   show('gameover');   break;
+  }
+}
+
+function pname(s,id){ return s.players[id]?s.players[id].name:'?'; }
+function youTag(id){ return id===myId?'<span class="you">(you)</span>':''; }
+
+// ── LOBBY ──────────────────────────────────────────────
+function rLobby(s){
+  const el=document.getElementById('lob-code');
+  el.textContent=gameCode;
+  el.onclick=()=>{
+    navigator.clipboard.writeText(gameCode).catch(()=>{});
+    el.textContent='Copied!';
+    setTimeout(()=>el.textContent=gameCode,1600);
+  };
+  const pl=document.getElementById('lob-players'); pl.innerHTML='';
+  (s.playerOrder||[]).forEach(id=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span>'+pname(s,id)+youTag(id)+'</span>'+(id===s.hostId?'<span style="color:#d4af37;font-size:12px">HOST</span>':'');
+    pl.appendChild(row);
+  });
+  const act=document.getElementById('lob-actions'); act.innerHTML='';
+  if(amHost()){
+    const n=(s.playerOrder||[]).length;
+    act.innerHTML=n>=2
+      ?'<button class="btn" onclick="startGame()">Start Game →</button>'
+      :'<div class="waiting">Waiting for at least 1 more player...</div>';
+  } else {
+    act.innerHTML='<div class="waiting">Waiting for host to start the game...</div>';
+  }
+}
+
+// ── ROUND INTRO ────────────────────────────────────────
+function makePips(s){
+  const d=document.getElementById('ri-pips'); d.innerHTML='';
+  ROUNDS.forEach((n,i)=>{
+    const p=document.createElement('div'); p.className='pip';
+    const done=i<s.roundIdx,cur=i===s.roundIdx;
+    p.style.cssText='width:'+(cur?28:18)+'px;height:'+(cur?28:18)+'px;background:'+(done?'#1a5a35':cur?'#d4af37':'#0e2a1c')+';border:'+(cur?'none':'1px solid #1a4a2e')+';font-size:'+(cur?11:9)+'px;color:'+(done?'#7ec8a0':cur?'#060f0a':'#2a6040');
+    p.textContent=n; d.appendChild(p);
+  });
+}
+
+function rRoundIntro(s){
+  const cc=ROUNDS[s.roundIdx], o=s.playerOrder;
+  document.getElementById('ri-title').textContent='Round '+(s.roundIdx+1);
+  makePips(s);
+  document.getElementById('ri-cards').textContent=cc;
+  document.getElementById('ri-dealer').textContent=pname(s,o[s.dealerIdx]);
+  document.getElementById('ri-first').textContent=pname(s,o[(s.dealerIdx+1)%o.length]);
+  const sc=document.getElementById('ri-scores'); sc.innerHTML='';
+  o.forEach(id=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span>'+pname(s,id)+youTag(id)+'</span><span style="color:#d4af37;font-weight:bold">'+(s.players[id].score||0)+' pts</span>';
+    sc.appendChild(row);
+  });
+  const act=document.getElementById('ri-actions'); act.innerHTML='';
+  if(amHost()){
+    act.innerHTML='<button class="btn" onclick="startBidding()" style="margin-top:14px">Start Bidding →</button>';
+  } else {
+    act.innerHTML='<div class="waiting" style="margin-top:14px">Waiting for host to start bidding...</div>';
+  }
+}
+
+// ── BIDDING ────────────────────────────────────────────
+function rBidding(s){
+  const cc=ROUNDS[s.roundIdx], o=s.playerOrder, n=o.length;
+  const bo=bidOrder(s), curr=currentBidder(s), isMyTurn=curr===myId;
+  const restricted=restrictedBid(s);
+  const totalSoFar=o.reduce((sum,id)=>{ const b=(s.bids||{})[id]; return sum+(b>=0?b:0); },0);
+
+  document.getElementById('bid-sub').textContent=
+    'Round '+(s.roundIdx+1)+' · '+cc+' cards · '+(s.bidStep+1)+' of '+n;
+
+  const notice=document.getElementById('bid-notice'); notice.innerHTML='';
+  if(isMyTurn && restricted!==null){
+    notice.innerHTML='<div class="notice-warn">⚠️ You (dealer) cannot bid <strong>'+restricted+'</strong> — total can\'t equal '+cc+'</div>';
+  }
+
+  const main=document.getElementById('bid-main'); main.innerHTML='';
+  if(isMyTurn){
+    let html='<div style="text-align:center;margin:12px 0 4px">'+
+      '<div style="font-size:12px;color:#5a8a6a;letter-spacing:1px;margin-bottom:6px">'+(s.bidStep===n-1?'YOUR BID (DEALER)':'YOUR BID')+'</div>'+
+      '<div style="font-size:28px;font-weight:bold;color:#d4af37">'+pname(s,myId)+'</div>'+
+      '<div style="color:#5a8a6a;font-size:14px;margin-top:4px">How many tricks will you win?</div>'+
+      '</div><div class="bid-grid">';
+    for(let i=0;i<=cc;i++){
+      const off=i===restricted;
+      html+='<button class="bid-btn" '+(off?'disabled':'')+' onclick="placeBid('+i+')">'+i+
+        (off?'<span style="position:absolute;top:2px;right:4px;font-size:10px;color:#7a4a00">✕</span>':'')+
+        '</button>';
+    }
+    html+='</div>';
+    main.innerHTML=html;
+  } else {
+    main.innerHTML='<div style="text-align:center;padding:22px 0">'+
+      '<div style="font-size:13px;color:#5a8a6a;letter-spacing:1px;margin-bottom:8px">WAITING FOR</div>'+
+      '<div style="font-size:30px;font-weight:bold;color:#d4af37">'+pname(s,curr)+'</div>'+
+      '<div style="color:#5a8a6a;font-size:14px;margin-top:6px">to place their bid...</div>'+
+      '</div>';
+  }
+
+  const log=document.getElementById('bid-log'); log.innerHTML='';
+  if(o.some(id=>(s.bids||{})[id]>=0)){
+    const wrap=document.createElement('div'); wrap.className='infobox'; wrap.style.marginBottom='0';
+    let h='<div class="lbl">bids so far · total: '+totalSoFar+'</div>';
+    o.forEach(id=>{ const b=(s.bids||{})[id]; if(b>=0) h+='<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:15px"><span style="color:#b0c8c0">'+pname(s,id)+youTag(id)+'</span><span style="color:#d4af37;font-weight:bold">'+b+'</span></div>'; });
+    wrap.innerHTML=h; log.appendChild(wrap);
+  }
+}
+
+// ── TRICKS ─────────────────────────────────────────────
+function rTricks(s){
+  const cc=ROUNDS[s.roundIdx], wonObj=s.won||{};
+  const total=Object.values(wonObj).reduce((a,b)=>a+b,0), rem=cc-total;
+
+  const badge=document.getElementById('tr-badge');
+  badge.textContent=rem>0?rem+' trick'+(rem!==1?'s':'')+' left to assign':'✓ All tricks assigned';
+  badge.className='badge'+(rem===0?' done':'');
+
+  const rows=document.getElementById('tr-rows'); rows.innerHTML='';
+  (s.playerOrder||[]).forEach(id=>{
+    const p=s.players[id]; if(!p) return;
+    const bid=(s.bids||{})[id]||0, w=wonObj[id]||0, isMe=id===myId, exact=w===bid;
+    const row=document.createElement('div'); row.className='cnt-row';
+    row.innerHTML=
+      '<div><div style="font-size:16px;font-weight:bold">'+p.name+youTag(id)+'</div>'+
+      '<div style="font-size:12px;color:#5a8a6a;margin-top:3px">bid: '+bid+'</div></div>'+
+      '<div style="display:flex;align-items:center;gap:14px">'+
+      (isMe?'<button class="cnt-btn'+(w<=0?' off':'')+'" onclick="changeWon(-1)">−</button>':'<div style="width:38px"></div>')+
+      '<span class="cnt-val" style="color:'+(exact?'#d4af37':'#f0e6d3')+'">'+w+'</span>'+
+      (isMe?'<button class="cnt-btn'+(total>=cc?' off':'')+'" onclick="changeWon(1)">+</button>':'<div style="width:38px"></div>')+
+      '</div>';
+    rows.appendChild(row);
+  });
+
+  const act=document.getElementById('tr-actions'); act.innerHTML='';
+  if(amHost()){
+    act.innerHTML=rem===0
+      ?'<button class="btn" onclick="finishRound()" style="margin-top:10px">Calculate Scores →</button>'
+      :'<div class="btn-disabled" style="margin-top:10px">Need '+rem+' more trick'+(rem!==1?'s':'')+'</div>';
+  } else {
+    if(rem===0) act.innerHTML='<div class="notice-ok">All tricks in — waiting for host to score...</div>';
+  }
+}
+
+// ── SUMMARY ────────────────────────────────────────────
+function rSummary(s){
+  document.getElementById('sum-title').textContent='Round '+(s.roundIdx+1)+' Results';
+  document.getElementById('sum-sub').textContent=s.roundIdx<14?(14-s.roundIdx)+' rounds remaining':'Final round!';
+
+  const rows=document.getElementById('sum-rows'); rows.innerHTML='';
+  (s.playerOrder||[]).forEach(id=>{
+    const p=s.players[id]; if(!p) return;
+    const bid=(s.lastBids||{})[id]||0, w=(s.lastWon||{})[id]||0, g=(s.lastScores||{})[id]||0;
+    const hit=w===bid, over=w>bid;
+    const row=document.createElement('div'); row.className='row'; row.style.padding='13px 0';
+    row.innerHTML=
+      '<div style="flex:1"><div style="font-weight:bold;font-size:16px">'+p.name+youTag(id)+'</div>'+
+      '<div style="font-size:13px;color:#5a8a6a;margin-top:3px">bid <strong style="color:#f0e6d3">'+bid+'</strong> · won <strong style="color:#f0e6d3">'+w+'</strong> · '+
+      '<span style="color:'+(hit?'#7ec8a0':over?'#d4a045':'#c44444')+'">'+(hit?'✓ Exact!':over?'▲ Over':'✗ Under')+'</span></div></div>'+
+      '<div style="text-align:right;margin-left:12px"><div style="font-size:22px;font-weight:bold;color:'+(g>0?'#d4af37':'#5a4a4a')+'">+'+g+'</div><div style="font-size:12px;color:#5a8a6a">'+p.score+' total</div></div>';
+    rows.appendChild(row);
+  });
+
+  const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);
+  const board=document.getElementById('sum-board'); board.innerHTML='';
+  sorted.forEach(({id,sc,n},r)=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span style="color:'+(r===0?'#d4af37':'#b0c8c0')+';font-size:15px">'+MEDALS[r]+' '+n+youTag(id)+'</span><span style="font-weight:bold;color:'+(r===0?'#d4af37':'#f0e6d3')+'">'+sc+'</span>';
+    board.appendChild(row);
+  });
+
+  const act=document.getElementById('sum-actions'); act.innerHTML='';
+  if(amHost()){
+    act.innerHTML='<button class="btn" onclick="nextRound()" style="margin-top:10px">'+(s.roundIdx===14?'Final Results 🏆':'Next Round →')+'</button>';
+  } else {
+    act.innerHTML='<div class="waiting" style="margin-top:14px">Waiting for host to continue...</div>';
+  }
+}
+
+// ── GAME OVER ──────────────────────────────────────────
+function rGameOver(s){
+  const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);
+  document.getElementById('go-winner').textContent=sorted[0].n+(sorted[0].id===myId?' 🎉':'');
+  document.getElementById('go-pts').textContent=sorted[0].sc+' points';
+  const board=document.getElementById('go-board'); board.innerHTML='';
+  sorted.slice(1).forEach(({id,sc,n},r)=>{
+    const row=document.createElement('div'); row.className='row';
+    row.innerHTML='<span style="font-size:16px">'+MEDALS[r+1]+' '+n+youTag(id)+'</span><span style="font-weight:bold;color:#d4af37">'+sc+' pts</span>';
+    board.appendChild(row);
+  });
+}
+
+// ── auto-rejoin on refresh ─────────────────────────────
+(async()=>{
+  const savedCode=sessionStorage.getItem('udtr_code');
+  const savedName=sessionStorage.getItem('udtr_name');
+  if(!savedCode||!savedName) return;
+  try {
+    const playerSnap=await db.ref('games/'+savedCode+'/players/'+myId).once('value');
+    if(!playerSnap.exists()) return;
+    const hostSnap=await db.ref('games/'+savedCode+'/hostId').once('value');
+    gameCode=savedCode; myName=savedName;
+    // isHost handled dynamically via amHost()
+    subscribe();
+  } catch(e){}
+})();
+</script>
+</body>
+</html>
