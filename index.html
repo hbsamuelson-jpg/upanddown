@@ -8,78 +8,126 @@
 <title>Up & Down the River</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:radial-gradient(ellipse at 50% 0%,#1a4a2e 0%,#0a1f14 60%,#060f0a 100%);min-height:100vh;color:#f0e6d3;overscroll-behavior:none}
-.screen{display:none;padding:12px 12px 40px;align-items:center;flex-direction:column}
+html,body{height:100%;overflow:hidden}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#060f0a;color:#f0e6d3}
+
+/* ── screens ── */
+.screen{display:none;height:100vh;width:100%;flex-direction:column;overflow:hidden}
 .screen.active{display:flex}
-.card{background:rgba(10,31,20,0.92);border:1px solid #1a4a2e;border-radius:20px;padding:18px 16px;width:100%;max-width:430px;margin-bottom:10px}
-.title{font-size:22px;font-weight:700;text-align:center;color:#d4af37;margin-bottom:3px;letter-spacing:.3px}
-.sub{font-size:13px;color:#5a8a6a;text-align:center;margin-bottom:16px}
-.lbl{font-size:11px;color:#5a8a6a;letter-spacing:1px;margin-bottom:7px;text-transform:uppercase}
-input[type=text]{width:100%;padding:12px 14px;font-size:16px;border:1px solid #1a4a2e;border-radius:12px;background:#06160d;color:#f0e6d3;margin-bottom:8px;outline:none}
-.btn{width:100%;padding:14px;font-size:16px;font-weight:700;cursor:pointer;border-radius:14px;border:none;background:linear-gradient(135deg,#d4af37,#b8962e);color:#060f0a;margin-top:10px;letter-spacing:.2px}
-.btn-ghost{width:100%;padding:12px;font-size:15px;font-weight:600;cursor:pointer;border-radius:14px;border:1px solid #1a4a2e;background:transparent;color:#5a8a6a;margin-top:8px}
-.row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid #0e2a1c}
+
+/* ── scrollable screens (landing/lobby/summary/gameover) ── */
+.screen.scroll{overflow-y:auto;align-items:center;padding:16px 14px 40px;background:radial-gradient(ellipse at 50% 0%,#1a4a2e 0%,#0a1f14 60%,#060f0a 100%)}
+
+/* ── card UI ── */
+.ucard{background:rgba(10,31,20,0.95);border:1px solid #1a4a2e;border-radius:18px;padding:18px 16px;width:100%;max-width:480px;margin-bottom:10px}
+.title{font-size:22px;font-weight:700;text-align:center;color:#d4af37;margin-bottom:3px}
+.sub{font-size:13px;color:#5a8a6a;text-align:center;margin-bottom:14px}
+.lbl{font-size:10px;color:#5a8a6a;letter-spacing:1.2px;margin-bottom:6px;text-transform:uppercase}
+input[type=text]{width:100%;padding:11px 13px;font-size:16px;border:1px solid #1a4a2e;border-radius:11px;background:#06160d;color:#f0e6d3;margin-bottom:8px;outline:none}
+.btn{width:100%;padding:13px;font-size:15px;font-weight:700;cursor:pointer;border-radius:13px;border:none;background:linear-gradient(135deg,#d4af37,#b8962e);color:#060f0a;margin-top:8px;letter-spacing:.2px}
+.btn-ghost{width:100%;padding:11px;font-size:14px;font-weight:600;cursor:pointer;border-radius:13px;border:1px solid #1a4a2e;background:transparent;color:#5a8a6a;margin-top:6px}
+.row{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #0e2a1c}
 .row:last-child{border-bottom:none}
-.infobox{background:#06160d;border:1px solid #1a4a2e;border-radius:14px;padding:13px 15px;margin-bottom:12px}
-.notice-warn{background:#1a0e00;border:1px solid #7a4a00;border-radius:10px;padding:9px 13px;font-size:13px;color:#c8883a;margin-bottom:10px;text-align:center}
-.notice-info{background:#0a1020;border:1px solid #1a3a6a;border-radius:10px;padding:9px 13px;font-size:13px;color:#5a9acc;margin-bottom:10px;text-align:center}
-.notice-ok{background:#0a1f0a;border:1px solid #1a5a1a;border-radius:10px;padding:9px 13px;font-size:13px;color:#7ec8a0;text-align:center}
-.pips{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.infobox{background:#06160d;border:1px solid #1a4a2e;border-radius:13px;padding:12px 14px;margin-bottom:10px}
+.notice-warn{background:#1a0e00;border:1px solid #7a4a00;border-radius:9px;padding:8px 12px;font-size:13px;color:#c8883a;margin-bottom:9px;text-align:center}
+.notice-info{background:#0a1020;border:1px solid #1a3a6a;border-radius:9px;padding:8px 12px;font-size:13px;color:#5a9acc;margin-bottom:9px;text-align:center}
+.notice-ok{background:#0a1f0a;border:1px solid #1a5a1a;border-radius:9px;padding:8px 12px;font-size:13px;color:#7ec8a0;text-align:center}
+.pips{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;margin-bottom:12px}
 .pip{border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:bold;flex-shrink:0;transition:all .2s}
-.bid-grid{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:12px 0}
-.bid-btn{width:54px;height:54px;border-radius:50%;font-size:20px;font-weight:bold;background:linear-gradient(145deg,#1a4a2e,#0e2a1c);color:#f0e6d3;border:1px solid #2a6040;cursor:pointer;position:relative}
-.bid-btn:disabled{background:#060f0a;color:#1a3a2a;border-color:#0e1a14;cursor:not-allowed}
-.winner-box{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:16px;padding:18px;text-align:center;margin-bottom:16px}
-.code-big{font-size:50px;font-weight:700;color:#d4af37;text-align:center;letter-spacing:10px;margin:8px 0;cursor:pointer}
-.divider{display:flex;align-items:center;gap:10px;margin:12px 0;color:#2a6040;font-size:13px}
+.winner-box{background:rgba(212,175,55,.1);border:1px solid rgba(212,175,55,.3);border-radius:14px;padding:16px;text-align:center;margin-bottom:14px}
+.code-big{font-size:48px;font-weight:700;color:#d4af37;text-align:center;letter-spacing:10px;margin:6px 0;cursor:pointer}
+.divider{display:flex;align-items:center;gap:10px;margin:10px 0;color:#2a6040;font-size:13px}
 .divider::before,.divider::after{content:'';flex:1;border-top:1px solid #1a4a2e}
-.waiting{font-size:14px;color:#5a8a6a;text-align:center;padding:10px 0}
-.err{color:#c44444;font-size:13px;text-align:center;margin-top:8px;min-height:18px}
+.waiting{font-size:13px;color:#5a8a6a;text-align:center;padding:8px 0}
+.err{color:#c44444;font-size:13px;text-align:center;margin-top:6px;min-height:16px}
 .you-tag{color:#5a8a6a;font-size:11px;margin-left:3px}
-/* cards */
-.pc{width:52px;height:76px;background:#fff;border-radius:8px;border:1.5px solid #bbb;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;flex-shrink:0;box-shadow:0 2px 6px rgba(0,0,0,.45);user-select:none;cursor:default;transition:transform .1s,box-shadow .1s}
-.pc .v{position:absolute;font-size:12px;font-weight:800;line-height:1.1;display:flex;flex-direction:column;align-items:center}
-.pc .v.tl{top:3px;left:4px}
-.pc .v.br{bottom:3px;right:4px;transform:rotate(180deg)}
-.pc .sm{font-size:25px}
-.pc.playable{border:2.5px solid #d4af37;cursor:pointer;box-shadow:0 2px 14px rgba(212,175,55,.55)}
-.pc.playable:active{transform:translateY(-8px);box-shadow:0 8px 20px rgba(212,175,55,.65)}
-.pc.dim{opacity:.32;cursor:not-allowed}
+.bid-grid{display:flex;flex-wrap:wrap;gap:9px;justify-content:center;margin:10px 0}
+.bid-btn{width:54px;height:54px;border-radius:50%;font-size:20px;font-weight:bold;background:linear-gradient(145deg,#1a4a2e,#0e2a1c);color:#f0e6d3;border:1px solid #2a6040;cursor:pointer;position:relative;transition:transform .1s}
+.bid-btn:active{transform:scale(.93)}
+.bid-btn:disabled{background:#060f0a;color:#1a3a2a;border-color:#0e1a14;cursor:not-allowed}
+
+/* ── playing card ── */
+.pc{background:#fff;border-radius:8px;border:1.5px solid #ccc;display:inline-flex;flex-direction:column;align-items:center;justify-content:center;position:relative;user-select:none;transition:transform .12s,box-shadow .12s,border-color .12s;flex-shrink:0}
+.pc .vt{position:absolute;font-weight:800;line-height:1.1;display:flex;flex-direction:column;align-items:center}
+.pc .tl{top:3px;left:4px}
+.pc .br{bottom:3px;right:4px;transform:rotate(180deg)}
+.pc.playable{border:2.5px solid #d4af37;cursor:pointer;box-shadow:0 0 16px rgba(212,175,55,.6)}
+.pc.playable:active{transform:translateY(-10px) scale(1.04);box-shadow:0 10px 24px rgba(212,175,55,.7)}
+.pc.dim{opacity:.28;cursor:not-allowed;filter:grayscale(.4)}
 .pc.back{background:linear-gradient(145deg,#1a4a2e,#0a2818);border-color:#2a6040}
-.slot{width:52px;height:76px;flex-shrink:0;border:2px dashed #1a4a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1a4a2e;font-size:20px}
-.hand{display:flex;gap:7px;overflow-x:auto;padding:5px 2px 10px;-webkit-overflow-scrolling:touch}
-.tr-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid #0e2a1c}
-.tr-row:last-child{border-bottom:none}
-.tbadge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:20px;font-size:14px;font-weight:bold;border:1px solid #2a6040;background:#06160d}
+.slot{border:2px dashed #1a4a2e;border-radius:8px;display:flex;align-items:center;justify-content:center;color:#1a4a2e;font-size:18px;flex-shrink:0}
+
+/* ── full screen play layout ── */
+#s-playing{background:#0a1a10}
+#s-bidding{background:#0a1a10}
+.play-top{background:rgba(6,15,10,.95);border-bottom:1px solid #1a4a2e;padding:10px 14px;flex-shrink:0}
+.play-mid{flex:1;overflow:hidden;padding:10px 14px;display:flex;flex-direction:column;gap:8px}
+.play-bot{background:rgba(6,15,10,.98);border-top:1px solid #1a4a2e;padding:10px 14px 18px;flex-shrink:0}
+
+/* trump bar */
+.trump-bar{display:flex;align-items:center;gap:10px;background:rgba(30,10,10,.6);border:2px solid;border-radius:12px;padding:8px 14px}
+.trump-sym{font-size:36px;line-height:1}
+.trump-info{display:flex;flex-direction:column}
+.trump-card-wrap{margin-left:auto}
+
+/* trick table */
+.trick-table{flex:1;overflow:hidden;display:flex;flex-direction:column;gap:4px}
+.trick-player{display:flex;align-items:center;gap:10px;padding:5px 0;border-bottom:1px solid #0e2a1c}
+.trick-player:last-child{border-bottom:none}
+.trick-name{flex:1;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* score strip */
+.score-strip{display:flex;gap:6px;overflow-x:auto;padding:2px 0}
+.score-pill{display:flex;flex-direction:column;align-items:center;background:#06160d;border:1px solid #1a4a2e;border-radius:10px;padding:5px 10px;flex-shrink:0;min-width:60px}
+
+/* hand fan */
+.hand-fan{display:flex;justify-content:center;align-items:flex-end;padding:4px 0 0}
+
+/* responsive desktop */
+@media (min-width:700px){
+  .screen.scroll{padding:24px 20px 50px}
+  .ucard{max-width:520px;padding:24px 22px}
+  .play-top{padding:12px 24px}
+  .play-mid{padding:14px 24px;gap:12px}
+  .play-bot{padding:12px 24px 22px}
+  .trump-sym{font-size:52px}
+  .bid-btn{width:62px;height:62px;font-size:22px}
+}
+@media (min-width:1000px){
+  #s-playing,#s-bidding{flex-direction:row;flex-wrap:wrap}
+  .play-top{width:100%;flex-direction:row;display:flex;align-items:center;justify-content:space-between}
+  .play-mid{flex:1;min-width:300px}
+  .play-bot{width:100%}
+}
 </style>
 </head>
 <body>
 
 <!-- LANDING -->
-<div id="s-landing" class="screen active">
-  <div class="card" style="margin-top:20px">
-    <div style="font-size:42px;text-align:center;margin-bottom:6px">🃏</div>
+<div id="s-landing" class="screen scroll">
+  <div class="ucard" style="margin-top:10px">
+    <div style="font-size:44px;text-align:center;margin-bottom:6px">🃏</div>
     <div class="title">Up & Down the River</div>
-    <div class="sub">online multiplayer card game</div>
+    <div class="sub">online multiplayer</div>
     <div class="lbl">your name</div>
-    <input id="my-name" type="text" placeholder="Enter your name"/>
+    <input id="my-name" type="text" placeholder="Enter your name" autocomplete="off"/>
     <button class="btn" onclick="createGame()">Create New Game</button>
     <div class="divider">or join existing</div>
     <div class="lbl">game code</div>
     <input id="join-code" type="text" placeholder="A B C D" maxlength="4"
-      style="font-size:28px;font-weight:700;letter-spacing:8px;text-align:center;text-transform:uppercase"/>
+      style="font-size:28px;font-weight:700;letter-spacing:8px;text-align:center;text-transform:uppercase" autocomplete="off"/>
     <button class="btn-ghost" onclick="joinGame()">Join Game →</button>
     <div class="err" id="err"></div>
   </div>
 </div>
 
 <!-- LOBBY -->
-<div id="s-lobby" class="screen">
-  <div class="card" style="margin-top:16px">
+<div id="s-lobby" class="screen scroll">
+  <div class="ucard" style="margin-top:10px">
     <div class="title">Waiting Room</div>
     <div class="sub">share the code with everyone</div>
     <div class="code-big" id="lob-code"></div>
-    <div class="notice-info" style="margin-bottom:14px">Tap the code to copy it</div>
+    <div class="notice-info" style="margin-bottom:12px">Tap the code to copy it</div>
     <div class="lbl">players joined</div>
     <div id="lob-players"></div>
     <div id="lob-actions"></div>
@@ -87,13 +135,13 @@ input[type=text]{width:100%;padding:12px 14px;font-size:16px;border:1px solid #1
 </div>
 
 <!-- ROUND INTRO -->
-<div id="s-roundIntro" class="screen">
-  <div class="card" style="margin-top:14px">
+<div id="s-roundIntro" class="screen scroll">
+  <div class="ucard" style="margin-top:10px">
     <div class="title" id="ri-title"></div>
     <div class="sub">of 15</div>
     <div class="pips" id="ri-pips"></div>
-    <div style="text-align:center;margin:6px 0 14px">
-      <div style="font-size:54px;font-weight:700;color:#d4af37;line-height:1" id="ri-cards"></div>
+    <div style="text-align:center;margin:6px 0 16px">
+      <div style="font-size:72px;font-weight:700;color:#d4af37;line-height:1" id="ri-cards"></div>
       <div style="color:#5a8a6a;font-size:14px;margin-top:4px">cards per player</div>
     </div>
     <div class="lbl">scores</div>
@@ -102,61 +150,72 @@ input[type=text]{width:100%;padding:12px 14px;font-size:16px;border:1px solid #1
   </div>
 </div>
 
-<!-- BIDDING -->
+<!-- BIDDING — full screen layout -->
 <div id="s-bidding" class="screen">
-  <div class="card" style="margin-top:14px">
-    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+  <div class="play-top">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:10px">
       <div>
-        <div class="title" style="text-align:left;font-size:18px">Bidding</div>
+        <div style="font-size:15px;font-weight:700;color:#d4af37" id="bid-title"></div>
         <div style="font-size:12px;color:#5a8a6a;margin-top:1px" id="bid-sub"></div>
       </div>
-      <div id="bid-trump"></div>
+      <div id="bid-trump-bar" style="flex-shrink:0"></div>
     </div>
+  </div>
+  <div class="play-mid" style="overflow-y:auto">
     <div id="bid-notice"></div>
     <div id="bid-main"></div>
     <div id="bid-log"></div>
-    <div style="margin-top:14px">
-      <div class="lbl">your hand</div>
-      <div class="hand" id="bid-hand"></div>
-    </div>
+  </div>
+  <div class="play-bot">
+    <div class="lbl">your hand</div>
+    <div class="hand-fan" id="bid-hand"></div>
   </div>
 </div>
 
-<!-- PLAYING -->
+<!-- PLAYING — full screen layout -->
 <div id="s-playing" class="screen">
-  <div class="card" style="margin-top:14px">
-    <div id="play-header"></div>
-    <div id="play-trick"></div>
+  <div class="play-top">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px">
+      <div>
+        <div style="font-size:14px;font-weight:700" id="play-round-info"></div>
+        <div style="font-size:12px;color:#5a8a6a;margin-top:1px" id="play-lead-info"></div>
+      </div>
+      <div id="play-trump-bar" style="flex-shrink:0"></div>
+    </div>
+    <div id="play-score-strip"></div>
+  </div>
+  <div class="play-mid">
+    <div class="lbl" id="play-trick-lbl"></div>
+    <div class="trick-table" id="play-trick"></div>
     <div id="play-status"></div>
-    <div id="play-hand"></div>
-    <div id="play-scores"></div>
     <div id="play-actions"></div>
+  </div>
+  <div class="play-bot">
+    <div class="lbl" id="play-hand-lbl">your hand</div>
+    <div class="hand-fan" id="play-hand"></div>
   </div>
 </div>
 
 <!-- SUMMARY -->
-<div id="s-summary" class="screen">
-  <div class="card" style="margin-top:14px">
+<div id="s-summary" class="screen scroll">
+  <div class="ucard" style="margin-top:10px">
     <div class="title" id="sum-title"></div>
     <div class="sub" id="sum-sub"></div>
     <div id="sum-rows"></div>
-    <div style="margin-top:10px">
-      <div class="lbl">leaderboard</div>
-      <div id="sum-board"></div>
-    </div>
+    <div style="margin-top:10px"><div class="lbl">leaderboard</div><div id="sum-board"></div></div>
     <div id="sum-actions"></div>
   </div>
 </div>
 
 <!-- GAME OVER -->
-<div id="s-gameover" class="screen">
-  <div class="card" style="margin-top:18px;text-align:center">
+<div id="s-gameover" class="screen scroll">
+  <div class="ucard" style="margin-top:16px;text-align:center">
     <div style="font-size:52px;margin-bottom:6px">🏆</div>
     <div class="title">Game Over!</div>
-    <div class="winner-box" style="margin-top:14px">
-      <div style="font-size:12px;color:#5a8a6a;letter-spacing:1px;margin-bottom:5px">WINNER</div>
+    <div class="winner-box" style="margin-top:12px">
+      <div style="font-size:11px;color:#5a8a6a;letter-spacing:1px;margin-bottom:4px">WINNER</div>
       <div style="font-size:28px;font-weight:bold;color:#d4af37" id="go-winner"></div>
-      <div style="font-size:17px;margin-top:4px" id="go-pts"></div>
+      <div style="font-size:16px;margin-top:4px" id="go-pts"></div>
     </div>
     <div id="go-board" style="text-align:left"></div>
     <button class="btn" onclick="leaveGame()">New Game</button>
@@ -181,17 +240,24 @@ const db=firebase.database();
 const ROUNDS=[8,7,6,5,4,3,2,1,2,3,4,5,6,7,8];
 const MEDALS=['🥇','🥈','🥉','4th','5th','6th','7th','8th'];
 const SUITS=['S','H','D','C'];
+const SNAME={S:'Spades',H:'Hearts',D:'Diamonds',C:'Clubs'};
 const VALUES=['2','3','4','5','6','7','8','9','T','J','Q','K','A'];
 const SYM={S:'♠',H:'♥',D:'♦',C:'♣'};
-const SCOL={S:'#1a2a4a',H:'#b01818',D:'#b01818',C:'#1a2a4a'};
+const SCOL={S:'#1a2a5a',H:'#cc1a1a',D:'#cc1a1a',C:'#1a2a5a'};
 const CNUM={'2':2,'3':3,'4':4,'5':5,'6':6,'7':7,'8':8,'9':9,T:10,J:11,Q:12,K:13,A:14};
 
 let myId=sessionStorage.getItem('udtr_id');
 if(!myId){myId=Math.random().toString(36).slice(2,10);sessionStorage.setItem('udtr_id',myId);}
 let myName='',gameCode='',gameRef=null,gs={};
 
-function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById('s-'+id).classList.add('active');window.scrollTo(0,0);}
-function setErr(m){const e=document.getElementById('err');e.textContent=m;setTimeout(()=>e.textContent='',3500);}
+// utils
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  const el=document.getElementById('s-'+id);
+  el.classList.add('active');
+  if(el.classList.contains('scroll'))el.scrollTop=0;
+}
+function setErr(m){const e=document.getElementById('err');if(!e)return;e.textContent=m;setTimeout(()=>e.textContent='',3500);}
 function amHost(){return gs&&gs.hostId===myId;}
 function pname(s,id){return s.players?.[id]?.name||'?';}
 function you(id){return id===myId?'<span class="you-tag">(you)</span>':'';}
@@ -201,52 +267,124 @@ function genCode(){const C='ABCDEFGHJKLMNPQRSTUVWXYZ';return[0,0,0,0].map(()=>C[
 // card utils
 function makeDeck(){const d=[];SUITS.forEach(s=>VALUES.forEach(v=>d.push(v+s)));return d;}
 function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=0|Math.random()*(i+1);[b[i],b[j]]=[b[j],b[i]];}return b;}
-function cSuit(c){return c.slice(-1);}
-function cVal(c){return c.slice(0,-1);}
+function cSuit(c){return c?c.slice(-1):'';}
+function cVal(c){return c?c.slice(0,-1):'';}
 function cNum(c){return CNUM[cVal(c)]||0;}
 function cDisp(v){return v==='T'?'10':v;}
 function parseHand(s){return s?s.split(',').filter(Boolean):[];}
-
-function canPlay(card,hand,leadSuit){
-  if(!leadSuit)return true;
-  const hasSuit=hand.some(c=>cSuit(c)===leadSuit);
-  return !hasSuit||cSuit(card)===leadSuit;
-}
-
-function trickWinner(trickCards,playerOrder,leadSuit,trumpSuit){
-  let winner=null,best=null;
-  playerOrder.forEach(id=>{
-    const card=trickCards[id];if(!card)return;
-    if(!winner){winner=id;best=card;return;}
-    const s=cSuit(card),bs=cSuit(best);
-    const iT=s===trumpSuit,bT=bs===trumpSuit,iL=s===leadSuit,bL=bs===leadSuit;
-    if(bT&&iT){if(cNum(card)>cNum(best)){winner=id;best=card;}}
-    else if(iT&&!bT){winner=id;best=card;}
-    else if(!bT&&iL&&!bL){winner=id;best=card;}
-    else if(!bT&&iL&&bL){if(cNum(card)>cNum(best)){winner=id;best=card;}}
-  });
-  return winner;
-}
-
-function trickOrder(playerOrder,leaderId){
-  const idx=playerOrder.indexOf(leaderId);
-  return playerOrder.map((_,i)=>playerOrder[(idx+i)%playerOrder.length]);
-}
-
+function canPlay(card,hand,leadSuit){if(!leadSuit)return true;const has=hand.some(c=>cSuit(c)===leadSuit);return !has||cSuit(card)===leadSuit;}
 function calcScore(bid,w){if(w===bid)return 10+2*bid;if(w>bid)return w;return 0;}
 
-// card HTML
+function trickWinner(tc,order,lead,trump){
+  let win=null,best=null;
+  order.forEach(id=>{
+    const c=tc[id];if(!c)return;
+    if(!win){win=id;best=c;return;}
+    const cs=cSuit(c),bs=cSuit(best);
+    const iT=cs===trump,bT=bs===trump,iL=cs===lead,bL=bs===lead;
+    if(bT&&iT){if(cNum(c)>cNum(best)){win=id;best=c;}}
+    else if(iT&&!bT){win=id;best=c;}
+    else if(!bT&&iL&&!bL){win=id;best=c;}
+    else if(!bT&&iL&&bL){if(cNum(c)>cNum(best)){win=id;best=c;}}
+  });
+  return win;
+}
+
+function trickOrder(order,leader){
+  const idx=order.indexOf(leader);
+  return order.map((_,i)=>order[(idx+i)%order.length]);
+}
+
+function sortHand(hand,trump){
+  return [...hand].sort((a,b)=>{
+    const as=cSuit(a),bs=cSuit(b);
+    if(as===trump&&bs!==trump)return 1;
+    if(bs===trump&&as!==trump)return -1;
+    if(as!==bs)return SUITS.indexOf(as)-SUITS.indexOf(bs);
+    return cNum(a)-cNum(b);
+  });
+}
+
+// ── card HTML ──────────────────────────────────────────────────────────────────
+function cardSize(){
+  // responsive card sizing
+  const w=window.innerWidth;
+  if(w>=700)return{w:62,h:90,fs:14,sm:30};
+  return{w:52,h:76,fs:12,sm:25};
+}
+
 function mkCard(c,cls,fn){
-  const v=cVal(c),s=cSuit(c),sym=SYM[s]||'?',col=SCOL[s]||'#000',d=cDisp(v);
-  return`<div class="pc ${cls||''}" style="color:${col}" ${fn?'onclick="'+fn+'"':''}>
-    <div class="v tl">${d}<br><span style="font-size:9px">${sym}</span></div>
-    <div class="sm">${sym}</div>
-    <div class="v br">${d}<br><span style="font-size:9px">${sym}</span></div>
+  if(!c)return mkSlot();
+  const v=cVal(c),su=cSuit(c),sym=SYM[su]||'?',col=SCOL[su]||'#000',d=cDisp(v);
+  const {w,h,fs,sm}=cardSize();
+  return`<div class="pc ${cls||''}" style="width:${w}px;height:${h}px;color:${col}" ${fn?'onclick="'+fn+'"':''}>`+
+    `<div class="vt tl" style="font-size:${fs}px">${d}<br><span style="font-size:${fs-3}px">${sym}</span></div>`+
+    `<div style="font-size:${sm}px">${sym}</div>`+
+    `<div class="vt br" style="font-size:${fs}px">${d}<br><span style="font-size:${fs-3}px">${sym}</span></div>`+
+  `</div>`;
+}
+
+function mkSlot(){
+  const {w,h}=cardSize();
+  return`<div class="slot" style="width:${w}px;height:${h}px">?</div>`;
+}
+
+function mkBack(){
+  const {w,h}=cardSize();
+  return`<div class="pc back" style="width:${w}px;height:${h}px"><div style="color:#2a6040;font-size:20px">♦</div></div>`;
+}
+
+// fan hand - overlapping cards that fill width without scroll
+function mkHandFan(cards,isMyTurn,leadSuit,trumpSuit,containerId){
+  if(!cards.length)return'<div style="color:#5a8a6a;font-size:13px;text-align:center;padding:8px">No cards</div>';
+  const {w,h}=cardSize();
+  const n=cards.length;
+  // compute overlap to fit within container minus padding
+  const containerW=Math.min(window.innerWidth,700)-60;
+  const natural=w+(n-1)*(w+6);
+  let step=w+6;
+  if(natural>containerW&&n>1){
+    step=Math.max(14,Math.floor((containerW-w)/(n-1)));
+  }
+  const totalW=w+(n-1)*step;
+  let html=`<div style="position:relative;height:${h+10}px;width:${totalW}px;margin:0 auto">`;
+  cards.forEach((c,i)=>{
+    const ok=isMyTurn&&canPlay(c,cards,leadSuit);
+    const cls=isMyTurn?(ok?'playable':'dim'):'';
+    const lift=ok?'translateY(-6px)':'';
+    html+=`<div style="position:absolute;left:${i*step}px;top:0;z-index:${i};${ok?'transform:'+lift:''}">`;
+    html+=mkCard(c,cls,ok?`playCard('${c}')`:'')+`</div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+// trump bar - always prominent
+function mkTrumpBar(suit,card,big){
+  if(!suit)return'';
+  const sym=SYM[suit],col=SCOL[suit],name=SNAME[suit];
+  const bCol=suit==='H'||suit==='D'?'rgba(180,20,20,.18)':'rgba(20,30,100,.18)';
+  if(big){
+    // large version for bidding screen
+    return`<div style="display:flex;align-items:center;gap:14px;background:${bCol};border:2.5px solid ${col};border-radius:14px;padding:12px 18px;margin-bottom:12px">
+      <div style="font-size:58px;color:${col};line-height:1;text-shadow:0 2px 10px ${col}88">${sym}</div>
+      <div style="flex:1">
+        <div style="font-size:10px;color:#5a8a6a;letter-spacing:1.5px;margin-bottom:3px">TRUMP SUIT</div>
+        <div style="font-size:22px;font-weight:800;color:${col}">${name}</div>
+        <div style="font-size:12px;color:#5a8a6a;margin-top:2px">beats all other suits</div>
+      </div>
+      ${card?`<div>${mkCard(card)}</div>`:''}
+    </div>`;
+  }
+  // compact version for play header
+  return`<div style="display:flex;align-items:center;gap:6px;background:${bCol};border:2px solid ${col};border-radius:10px;padding:6px 12px">
+    <span style="font-size:26px;color:${col};line-height:1">${sym}</span>
+    <div style="display:flex;flex-direction:column">
+      <span style="font-size:9px;color:#5a8a6a;letter-spacing:1px">TRUMP</span>
+      <span style="font-size:13px;font-weight:700;color:${col}">${name}</span>
+    </div>
   </div>`;
 }
-function mkSlot(){return`<div class="slot">?</div>`;}
-function mkBack(){return`<div class="pc back"><div style="color:#2a6040;font-size:20px">♦</div></div>`;}
-function tbadge(suit){if(!suit)return'';return`<div class="tbadge"><span style="color:${SCOL[suit]};font-size:18px">${SYM[suit]}</span><span style="font-size:11px;color:#5a8a6a">trump</span></div>`;}
 
 function makePips(s){
   const d=document.getElementById('ri-pips');if(!d)return;d.innerHTML='';
@@ -265,7 +403,7 @@ function subscribe(){
   gameRef.on('value',snap=>{const s=snap.val();if(!s)return;gs=s;render(s);});
 }
 
-// Actions
+// ── ACTIONS ────────────────────────────────────────────────────────────────────
 async function createGame(){
   myName=document.getElementById('my-name').value.trim();
   if(!myName){setErr('Enter your name');return;}
@@ -308,7 +446,7 @@ async function dealAndBid(){
   const deck=shuffle(makeDeck());
   const hands={},bids={},tricksWon={};
   o.forEach((id,i)=>{hands[id]=deck.slice(i*cc,(i+1)*cc).join(',');bids[id]=-1;tricksWon[id]=0;});
-  const trumpCard=deck[n*cc]||deck[0];
+  const trumpCard=deck[n*cc]||deck[deck.length-1];
   const trumpSuit=cSuit(trumpCard);
   const firstLeader=o[(gs.dealerIdx+1)%n];
   await upd({
@@ -321,15 +459,12 @@ async function dealAndBid(){
 
 async function placeBid(val){
   const o=gs.playerOrder,n=o.length,newStep=gs.bidStep+1;
-  const changes={[`bids/${myId}`]:val};
+  const ch={[`bids/${myId}`]:val};
   if(newStep>=n){
     const fl=o[(gs.dealerIdx+1)%n];
-    changes.phase='playing';changes.bidStep=newStep;
-    changes.trickLeader=fl;changes.trickTurn=fl;
-  } else {
-    changes.bidStep=newStep;
-  }
-  await upd(changes);
+    ch.phase='playing';ch.bidStep=newStep;ch.trickLeader=fl;ch.trickTurn=fl;
+  } else {ch.bidStep=newStep;}
+  await upd(ch);
 }
 
 async function playCard(card){
@@ -342,35 +477,33 @@ async function playCard(card){
   const newTrick={...(s.trickCards||{}),[myId]:card};
   const n=s.playerOrder.length,played=Object.keys(newTrick).length;
   const thisLead=leadSuit||cSuit(card);
-  const changes={[`hands/${myId}`]:newHand.join(','),[`trickCards/${myId}`]:card,trickLeadSuit:thisLead};
+  const ch={[`hands/${myId}`]:newHand.join(','),[`trickCards/${myId}`]:card,trickLeadSuit:thisLead};
   if(played===n){
     const winner=trickWinner(newTrick,s.playerOrder,thisLead,s.trumpSuit);
     const tw={...(s.tricksWon||{})};
-    s.playerOrder.forEach(id=>{if(!tw[id])tw[id]=0;});
+    s.playerOrder.forEach(id=>{if(tw[id]==null)tw[id]=0;});
     tw[winner]=(tw[winner]||0)+1;
     const done=(s.tricksDone||0)+1;
-    changes.trickWinner=winner;changes.trickComplete=true;
-    changes.tricksWon=tw;changes.tricksDone=done;
-    changes.lastTrickCards=newTrick;changes.lastTrickLead=thisLead;
+    ch.trickWinner=winner;ch.trickComplete=true;
+    ch.tricksWon=tw;ch.tricksDone=done;
+    ch.lastTrickCards=newTrick;ch.lastTrickLead=thisLead;
   } else {
     const ord=trickOrder(s.playerOrder,s.trickLeader);
-    const idx=ord.indexOf(myId);
-    changes.trickTurn=ord[idx+1];
+    ch.trickTurn=ord[ord.indexOf(myId)+1];
   }
-  await upd(changes);
+  await upd(ch);
 }
 
 async function startNextTrick(){
-  const winner=gs.trickWinner;
-  await upd({trickCards:null,trickLeadSuit:null,trickComplete:null,trickWinner:null,trickLeader:winner,trickTurn:winner});
+  const w=gs.trickWinner;
+  await upd({trickCards:null,trickLeadSuit:null,trickComplete:null,trickWinner:null,trickLeader:w,trickTurn:w});
 }
 
 async function finishRound(){
   const o=gs.playerOrder,lB={...gs.bids},lW={...gs.tricksWon},lS={};
-  const changes={phase:'summary',lastBids:lB,lastWon:lW};
-  o.forEach(id=>{const sc=calcScore(lB[id]||0,lW[id]||0);lS[id]=sc;changes[`players/${id}/score`]=(gs.players[id].score||0)+sc;});
-  changes.lastScores=lS;
-  await upd(changes);
+  const ch={phase:'summary',lastBids:lB,lastWon:lW};
+  o.forEach(id=>{const sc=calcScore(lB[id]||0,lW[id]||0);lS[id]=sc;ch[`players/${id}/score`]=(gs.players[id].score||0)+sc;});
+  ch.lastScores=lS;await upd(ch);
 }
 
 async function nextRound(){
@@ -381,7 +514,7 @@ async function nextRound(){
 
 function leaveGame(){if(gameRef)gameRef.off();sessionStorage.removeItem('udtr_code');show('landing');}
 
-// Render
+// ── RENDER ─────────────────────────────────────────────────────────────────────
 function render(s){
   switch(s.phase){
     case'lobby':      rLobby(s);      show('lobby');      break;
@@ -408,9 +541,7 @@ function rLobby(s){
     act.innerHTML=(s.playerOrder||[]).length>=2
       ?'<button class="btn" onclick="startGame()">Start Game →</button>'
       :'<div class="waiting">Need at least 2 players...</div>';
-  } else {
-    act.innerHTML='<div class="waiting">Waiting for host to start...</div>';
-  }
+  } else act.innerHTML='<div class="waiting">Waiting for host to start...</div>';
 }
 
 function rRoundIntro(s){
@@ -422,9 +553,11 @@ function rRoundIntro(s){
   o.forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+you(id)+'</span><span style="color:#d4af37;font-weight:bold">'+(s.players[id].score||0)+' pts</span>';sc.appendChild(r);});
   const dealer=o[s.dealerIdx],first=o[(s.dealerIdx+1)%o.length];
   const act=document.getElementById('ri-actions');
-  act.innerHTML='<div class="infobox" style="margin-top:12px"><div class="row"><span style="color:#5a8a6a;font-size:14px">Dealer</span><span style="color:#d4af37;font-weight:bold">'+pname(s,dealer)+'</span></div><div class="row" style="border:none;padding-bottom:0"><span style="color:#5a8a6a;font-size:14px">Bids & leads first</span><span style="font-weight:bold">'+pname(s,first)+'</span></div></div>';
-  if(amHost()) act.innerHTML+='<button class="btn" onclick="dealAndBid()" style="margin-top:4px">Deal Cards & Start Bidding →</button>';
-  else act.innerHTML+='<div class="waiting" style="margin-top:12px">Waiting for host to deal...</div>';
+  act.innerHTML='<div class="infobox" style="margin-top:12px">'+
+    '<div class="row"><span style="color:#5a8a6a">Dealer</span><span style="color:#d4af37;font-weight:bold">'+pname(s,dealer)+'</span></div>'+
+    '<div class="row" style="border:none;padding-bottom:0"><span style="color:#5a8a6a">Bids & leads first</span><span style="font-weight:bold">'+pname(s,first)+'</span></div></div>';
+  if(amHost())act.innerHTML+='<button class="btn" onclick="dealAndBid()">Deal Cards & Start Bidding →</button>';
+  else act.innerHTML+='<div class="waiting">Waiting for host to deal...</div>';
 }
 
 function rBidding(s){
@@ -435,21 +568,36 @@ function rBidding(s){
   const isEx=cc<=3;
   const restricted=(()=>{if(isEx||!isDealer)return null;const r=cc-totalSoFar;return(r>=0&&r<=cc)?r:null;})();
 
-  document.getElementById('bid-sub').textContent='Round '+(s.roundIdx+1)+' · '+cc+' cards · '+(s.bidStep+1)+' of '+n;
-  document.getElementById('bid-trump').innerHTML=tbadge(s.trumpSuit);
+  document.getElementById('bid-title').textContent='Bidding — Round '+(s.roundIdx+1);
+  document.getElementById('bid-sub').textContent=cc+' cards · bidder '+(s.bidStep+1)+' of '+n;
+  document.getElementById('bid-trump-bar').innerHTML=mkTrumpBar(s.trumpSuit,null,false);
 
   const notice=document.getElementById('bid-notice');notice.innerHTML='';
-  if(isMe&&restricted!==null) notice.innerHTML='<div class="notice-warn">⚠️ You (dealer) cannot bid <strong>'+restricted+'</strong> — total can\'t equal '+cc+'</div>';
 
   const main=document.getElementById('bid-main');main.innerHTML='';
-  if(isMe){
-    let h='<div style="text-align:center;margin:8px 0 4px"><div style="font-size:12px;color:#5a8a6a;letter-spacing:1px;margin-bottom:5px">'+(isDealer?'YOUR BID (DEALER)':'YOUR BID')+'</div><div style="font-size:24px;font-weight:bold;color:#d4af37">'+pname(s,myId)+'</div><div style="color:#5a8a6a;font-size:13px;margin-top:3px">How many tricks will you win?</div></div><div class="bid-grid">';
-    for(let i=0;i<=cc;i++){const off=i===restricted;h+='<button class="bid-btn"'+(off?' disabled':'')+' onclick="placeBid('+i+')">'+i+(off?'<span style="position:absolute;top:2px;right:4px;font-size:10px;color:#7a4a00">✕</span>':'')+'</button>';}
-    h+='</div>';main.innerHTML=h;
-  } else {
-    main.innerHTML='<div style="text-align:center;padding:16px 0"><div style="font-size:12px;color:#5a8a6a;letter-spacing:1px;margin-bottom:6px">WAITING FOR</div><div style="font-size:26px;font-weight:bold;color:#d4af37">'+pname(s,curr)+'</div><div style="color:#5a8a6a;font-size:13px;margin-top:4px">to place their bid...</div></div>';
-  }
 
+  // Big trump display always shown in bidding
+  let html=mkTrumpBar(s.trumpSuit,s.trumpCard,true);
+
+  if(isMe){
+    if(restricted!==null) notice.innerHTML='<div class="notice-warn">⚠️ You (dealer) cannot bid <strong>'+restricted+'</strong> — total bids can\'t equal '+cc+'</div>';
+    html+='<div style="text-align:center;margin:6px 0"><div style="font-size:11px;color:#5a8a6a;letter-spacing:1.2px;margin-bottom:5px">'+(isDealer?'YOUR BID (DEALER)':'YOUR BID')+'</div>'+
+      '<div style="font-size:22px;font-weight:bold;color:#d4af37;margin-bottom:4px">'+pname(s,myId)+' — how many tricks?</div>'+
+      '</div><div class="bid-grid">';
+    for(let i=0;i<=cc;i++){
+      const off=i===restricted;
+      html+='<button class="bid-btn"'+(off?' disabled':'')+' onclick="placeBid('+i+')">'+i+(off?'<span style="position:absolute;top:2px;right:4px;font-size:9px;color:#7a4a00">✕</span>':'')+'</button>';
+    }
+    html+='</div>';
+  } else {
+    html+='<div style="text-align:center;padding:14px 0">'+
+      '<div style="font-size:11px;color:#5a8a6a;letter-spacing:1.2px;margin-bottom:6px">WAITING FOR</div>'+
+      '<div style="font-size:26px;font-weight:bold;color:#d4af37">'+pname(s,curr)+'</div>'+
+      '<div style="color:#5a8a6a;font-size:13px;margin-top:4px">to place their bid...</div></div>';
+  }
+  main.innerHTML=html;
+
+  // bids so far
   const log=document.getElementById('bid-log');log.innerHTML='';
   if(o.some(id=>(s.bids||{})[id]>=0)){
     const wrap=document.createElement('div');wrap.className='infobox';wrap.style.marginBottom='0';
@@ -458,93 +606,71 @@ function rBidding(s){
     wrap.innerHTML=h;log.appendChild(wrap);
   }
 
-  const myHand=parseHand(s.hands?.[myId]);
-  const handEl=document.getElementById('bid-hand');handEl.innerHTML='';
-  // sort hand: trump last, by suit then value
-  const sorted=[...myHand].sort((a,b)=>{
-    const as=cSuit(a),bs2=cSuit(b);
-    if(as===s.trumpSuit&&bs2!==s.trumpSuit)return 1;
-    if(bs2===s.trumpSuit&&as!==s.trumpSuit)return -1;
-    if(as!==bs2)return SUITS.indexOf(as)-SUITS.indexOf(bs2);
-    return cNum(a)-cNum(b);
-  });
-  sorted.forEach(c=>{handEl.innerHTML+=mkCard(c,'','');});
-  if(s.trumpCard){
-    handEl.innerHTML+='<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;margin-left:8px;gap:3px;flex-shrink:0"><div style="font-size:9px;color:#5a8a6a;letter-spacing:1px;text-align:center">TRUMP<br>CARD</div>'+mkCard(s.trumpCard)+'</div>';
-  }
+  // sorted hand
+  const myHand=sortHand(parseHand(s.hands?.[myId]),s.trumpSuit);
+  document.getElementById('bid-hand').innerHTML=mkHandFan(myHand,false,null,s.trumpSuit);
 }
 
 function rPlaying(s){
-  const cc=ROUNDS[s.roundIdx],tC=s.trickCards||{},tW=s.tricksWon||{};
-  const myHand=parseHand(s.hands?.[myId]);
+  const cc=ROUNDS[s.roundIdx],tc=s.trickCards||{},tW=s.tricksWon||{};
+  const myHand=sortHand(parseHand(s.hands?.[myId]),s.trumpSuit);
   const isMe=s.trickTurn===myId,isDone=!!s.trickComplete;
   const leadSuit=s.trickLeadSuit;
   const trickNum=Math.min((s.tricksDone||0)+(isDone?0:1),cc);
   const ord=trickOrder(s.playerOrder,s.trickLeader||s.playerOrder[0]);
-  const displayCards=isDone?(s.lastTrickCards||tC):tC;
+  const displayCards=isDone?(s.lastTrickCards||tc):tc;
 
   // header
-  document.getElementById('play-header').innerHTML=
-    '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">'+
-    '<div><div style="font-size:15px;font-weight:bold">Round '+(s.roundIdx+1)+' · Trick '+trickNum+' of '+cc+'</div>'+
-    '<div style="font-size:12px;color:#5a8a6a;margin-top:2px">Lead: '+(leadSuit?'<span style="color:'+SCOL[leadSuit]+';font-weight:bold">'+SYM[leadSuit]+'</span>':'first card sets it')+'</div></div>'+
-    tbadge(s.trumpSuit)+'</div>';
+  document.getElementById('play-round-info').textContent='Round '+(s.roundIdx+1)+' · Trick '+trickNum+' of '+cc;
+  document.getElementById('play-lead-info').innerHTML='Lead suit: '+(leadSuit
+    ?'<span style="color:'+SCOL[leadSuit]+';font-weight:700">'+SYM[leadSuit]+' '+SNAME[leadSuit]+'</span>'
+    :'<span style="color:#5a8a6a">first card sets it</span>');
+  document.getElementById('play-trump-bar').innerHTML=mkTrumpBar(s.trumpSuit,null,false);
 
-  // trick area
-  let tHTML='<div style="margin-bottom:12px"><div class="lbl">'+(isDone?'TRICK RESULT':'CURRENT TRICK')+'</div>';
+  // score strip
+  let ss='<div class="score-strip">';
+  s.playerOrder.forEach(id=>{
+    const bid=(s.bids||{})[id]||0,won=tW[id]||0,exact=won===bid,over=won>bid;
+    const col=exact?'#7ec8a0':over?'#d4a045':'#f0e6d3';
+    const bdrCol=id===myId?'#d4af37':'#1a4a2e';
+    ss+=`<div class="score-pill" style="border-color:${bdrCol}">
+      <span style="font-size:11px;color:#5a8a6a;white-space:nowrap">${pname(s,id)}</span>
+      <span style="font-size:14px;font-weight:bold;color:${col}">${won}<span style="font-size:11px;color:#5a8a6a">/${bid}</span></span>
+    </div>`;
+  });
+  ss+='</div>';
+  document.getElementById('play-score-strip').innerHTML=ss;
+
+  // trick label
+  document.getElementById('play-trick-lbl').textContent=isDone?'TRICK RESULT':'CURRENT TRICK';
+
+  // trick cards
+  let tHTML='';
   ord.forEach(id=>{
     const p=s.players[id];if(!p)return;
     const card=displayCards[id],isWinner=isDone&&s.trickWinner===id;
-    tHTML+='<div class="tr-row"><span style="flex:1;font-size:14px'+(isWinner?';color:#d4af37;font-weight:bold':id===myId?';color:#b0d0c0':'')+'">'+(isWinner?'👑 ':'')+p.name+you(id)+'</span>'+(card?mkCard(card):mkSlot())+'</div>';
+    const nameCol=isWinner?'#d4af37':id===myId?'#b0d0c0':'#f0e6d3';
+    tHTML+=`<div class="trick-player">
+      <span class="trick-name" style="color:${nameCol}">${isWinner?'👑 ':''}${p.name}${you(id)}</span>
+      ${card?mkCard(card):mkSlot()}
+    </div>`;
   });
-  tHTML+='</div>';
   document.getElementById('play-trick').innerHTML=tHTML;
 
   // status
   let statusHTML='';
   if(isDone){
     const wname=pname(s,s.trickWinner);
-    statusHTML='<div class="notice-ok" style="margin:8px 0">'+(s.trickWinner===myId?'🎉 You win this trick!':wname+' wins this trick!')+'</div>';
+    statusHTML='<div class="notice-ok">'+(s.trickWinner===myId?'🎉 You win this trick!':wname+' wins this trick!')+'</div>';
   } else if(isMe){
     const hasLead=leadSuit&&myHand.some(c=>cSuit(c)===leadSuit);
-    statusHTML='<div class="notice-info" style="margin:8px 0">'+
-      (leadSuit?'Must follow <span style="color:'+SCOL[leadSuit]+';font-weight:bold">'+SYM[leadSuit]+'</span>'+(hasLead?' (you have it)':' — you\'re void, play anything')
-      :'Your lead — play any card')+'</div>';
+    statusHTML='<div class="notice-info">'+(leadSuit
+      ?'Follow <span style="color:'+SCOL[leadSuit]+';font-weight:700">'+SYM[leadSuit]+' '+SNAME[leadSuit]+'</span>'+(hasLead?' (you have it)':' — you\'re void, play anything')
+      :'<strong>Your lead</strong> — play any card')+'</div>';
   } else {
-    statusHTML='<div style="text-align:center;padding:8px 0;font-size:14px;color:#5a8a6a;margin:4px 0">Waiting for <strong style="color:#d4af37">'+pname(s,s.trickTurn)+'</strong>...</div>';
+    statusHTML='<div style="text-align:center;font-size:14px;color:#5a8a6a;padding:6px 0">Waiting for <strong style="color:#d4af37">'+pname(s,s.trickTurn)+'</strong>...</div>';
   }
   document.getElementById('play-status').innerHTML=statusHTML;
-
-  // hand
-  let handHTML='';
-  if(!isDone&&myHand.length>0){
-    const sorted2=[...myHand].sort((a,b)=>{
-      const as=cSuit(a),bs2=cSuit(b);
-      if(as===s.trumpSuit&&bs2!==s.trumpSuit)return 1;
-      if(bs2===s.trumpSuit&&as!==s.trumpSuit)return-1;
-      if(as!==bs2)return SUITS.indexOf(as)-SUITS.indexOf(bs2);
-      return cNum(a)-cNum(b);
-    });
-    handHTML='<div style="margin:4px 0 10px"><div class="lbl">your hand ('+myHand.length+')</div><div class="hand">';
-    sorted2.forEach(c=>{
-      const ok=isMe&&canPlay(c,myHand,leadSuit);
-      const cls=!isMe?'':ok?'playable':'dim';
-      handHTML+=mkCard(c,cls,ok?`playCard('${c}')`:'')+' ';
-    });
-    handHTML+='</div></div>';
-  } else if(!isDone&&myHand.length===0){
-    handHTML='<div style="text-align:center;padding:8px 0;font-size:13px;color:#5a8a6a">You\'ve played all your cards</div>';
-  }
-  document.getElementById('play-hand').innerHTML=handHTML;
-
-  // trick scores
-  let scHTML='<div class="infobox"><div class="lbl">tricks this round — bid/won</div>';
-  s.playerOrder.forEach(id=>{
-    const bid=(s.bids||{})[id]||0,won=tW[id]||0,exact=won===bid,over=won>bid;
-    scHTML+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:13px"><span style="color:'+(id===myId?'#b0d0c0':'#f0e6d3')+'">'+pname(s,id)+you(id)+'</span><span style="color:'+(exact?'#7ec8a0':over?'#d4a045':'#f0e6d3')+'">'+won+' / '+bid+'</span></div>';
-  });
-  scHTML+='</div>';
-  document.getElementById('play-scores').innerHTML=scHTML;
 
   // actions
   let actHTML='';
@@ -552,15 +678,22 @@ function rPlaying(s){
     const allDone=(s.tricksDone||0)>=cc;
     if(allDone){
       actHTML=amHost()
-        ?'<button class="btn" onclick="finishRound()">Score the Round →</button>'
+        ?'<button class="btn" onclick="finishRound()" style="margin-top:6px">Score the Round →</button>'
         :'<div class="waiting">Waiting for host to score...</div>';
     } else {
       actHTML=s.trickWinner===myId
-        ?'<button class="btn" onclick="startNextTrick()">Lead Next Trick →</button>'
-        :'<div class="waiting">Waiting for '+pname(s,s.trickWinner)+' to lead...</div>';
+        ?'<button class="btn" onclick="startNextTrick()" style="margin-top:6px">Lead Next Trick →</button>'
+        :'<div class="waiting">Waiting for <strong style="color:#d4af37">'+pname(s,s.trickWinner)+'</strong> to lead...</div>';
     }
   }
   document.getElementById('play-actions').innerHTML=actHTML;
+
+  // hand
+  document.getElementById('play-hand-lbl').textContent='your hand ('+myHand.length+' cards)';
+  document.getElementById('play-hand').innerHTML=
+    isDone&&myHand.length===0
+      ?'<div style="color:#5a8a6a;font-size:13px;text-align:center;padding:8px">All cards played</div>'
+      :mkHandFan(myHand,isMe&&!isDone,leadSuit,s.trumpSuit);
 }
 
 function rSummary(s){
@@ -572,15 +705,17 @@ function rSummary(s){
     const bid=(s.lastBids||{})[id]||0,w=(s.lastWon||{})[id]||0,g=(s.lastScores||{})[id]||0;
     const hit=w===bid,over=w>bid;
     const row=document.createElement('div');row.className='row';row.style.padding='12px 0';
-    row.innerHTML='<div style="flex:1"><div style="font-weight:bold;font-size:16px">'+p.name+you(id)+'</div><div style="font-size:13px;color:#5a8a6a;margin-top:2px">bid <strong style="color:#f0e6d3">'+bid+'</strong> · won <strong style="color:#f0e6d3">'+w+'</strong> · <span style="color:'+(hit?'#7ec8a0':over?'#d4a045':'#c44444')+'">'+(hit?'✓ Exact!':over?'▲ Over':'✗ Under')+'</span></div></div><div style="text-align:right;margin-left:10px"><div style="font-size:21px;font-weight:bold;color:'+(g>0?'#d4af37':'#5a4a4a')+'">+'+g+'</div><div style="font-size:12px;color:#5a8a6a">'+p.score+' total</div></div>';
+    row.innerHTML='<div style="flex:1"><div style="font-weight:bold;font-size:15px">'+p.name+you(id)+'</div>'+
+      '<div style="font-size:12px;color:#5a8a6a;margin-top:2px">bid <strong style="color:#f0e6d3">'+bid+'</strong> · won <strong style="color:#f0e6d3">'+w+'</strong> · <span style="color:'+(hit?'#7ec8a0':over?'#d4a045':'#c44444')+'">'+(hit?'✓ Exact!':over?'▲ Over':'✗ Under')+'</span></div></div>'+
+      '<div style="text-align:right;margin-left:10px"><div style="font-size:20px;font-weight:bold;color:'+(g>0?'#d4af37':'#5a4a4a')+'">+'+g+'</div><div style="font-size:11px;color:#5a8a6a">'+p.score+' total</div></div>';
     rows.appendChild(row);
   });
   const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);
   const board=document.getElementById('sum-board');board.innerHTML='';
-  sorted.forEach(({id,sc,n},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="color:'+(r===0?'#d4af37':'#b0c8c0')+';font-size:15px">'+MEDALS[r]+' '+n+you(id)+'</span><span style="font-weight:bold;color:'+(r===0?'#d4af37':'#f0e6d3')+'">'+sc+'</span>';board.appendChild(row);});
+  sorted.forEach(({id,sc,n},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="color:'+(r===0?'#d4af37':'#b0c8c0')+'">'+MEDALS[r]+' '+n+you(id)+'</span><span style="font-weight:bold;color:'+(r===0?'#d4af37':'#f0e6d3')+'">'+sc+'</span>';board.appendChild(row);});
   const act=document.getElementById('sum-actions');act.innerHTML='';
-  if(amHost()) act.innerHTML='<button class="btn" onclick="nextRound()" style="margin-top:10px">'+(s.roundIdx===14?'Final Results 🏆':'Next Round →')+'</button>';
-  else act.innerHTML='<div class="waiting" style="margin-top:12px">Waiting for host...</div>';
+  if(amHost())act.innerHTML='<button class="btn" onclick="nextRound()" style="margin-top:10px">'+(s.roundIdx===14?'Final Results 🏆':'Next Round →')+'</button>';
+  else act.innerHTML='<div class="waiting" style="margin-top:10px">Waiting for host...</div>';
 }
 
 function rGameOver(s){
@@ -588,18 +723,14 @@ function rGameOver(s){
   document.getElementById('go-winner').textContent=sorted[0].n+(sorted[0].id===myId?' 🎉':'');
   document.getElementById('go-pts').textContent=sorted[0].sc+' points';
   const board=document.getElementById('go-board');board.innerHTML='';
-  sorted.slice(1).forEach(({id,sc,n},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="font-size:15px">'+MEDALS[r+1]+' '+n+you(id)+'</span><span style="font-weight:bold;color:#d4af37">'+sc+' pts</span>';board.appendChild(row);});
+  sorted.slice(1).forEach(({id,sc,n},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span>'+MEDALS[r+1]+' '+n+you(id)+'</span><span style="font-weight:bold;color:#d4af37">'+sc+' pts</span>';board.appendChild(row);});
 }
 
 // auto-rejoin
 (async()=>{
   const code=sessionStorage.getItem('udtr_code'),name=sessionStorage.getItem('udtr_name');
   if(!code||!name)return;
-  try{
-    const snap=await db.ref('games/'+code+'/players/'+myId).once('value');
-    if(!snap.exists())return;
-    gameCode=code;myName=name;subscribe();
-  }catch(e){}
+  try{const snap=await db.ref('games/'+code+'/players/'+myId).once('value');if(!snap.exists())return;gameCode=code;myName=name;subscribe();}catch(e){}
 })();
 </script>
 </body>
