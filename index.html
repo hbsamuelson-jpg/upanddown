@@ -124,8 +124,18 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
 /* admin panel toggle */
 #adm-hide{position:fixed;bottom:16px;right:16px;z-index:9999;width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#7a1a6a,#4a0a4a);border:2px solid #c060c0;color:#f0c0f0;font-size:20px;cursor:pointer;box-shadow:0 4px 14px rgba(180,60,180,.5);display:none;align-items:center;justify-content:center;}
 #adm-hide.show{display:flex}
-#adm-panel{position:fixed;bottom:72px;right:16px;z-index:9998;width:min(94vw,370px);max-height:86vh;overflow-y:auto;background:rgba(30,10,30,.98);border:2px solid #9a30a0;border-radius:18px;padding:12px;display:none;flex-direction:column;gap:8px;box-shadow:0 8px 28px rgba(150,30,160,.4);}
+#adm-panel{position:fixed;bottom:72px;right:16px;z-index:9998;width:340px;max-width:94vw;max-height:82vh;background:rgba(30,10,30,.98);border:2px solid #9a30a0;border-radius:16px;display:none;flex-direction:column;box-shadow:0 8px 28px rgba(150,30,160,.5);overflow:hidden;min-width:200px;min-height:80px;}
 #adm-panel.open{display:flex}
+#adm-drag-bar{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;background:rgba(80,10,80,.9);cursor:grab;flex-shrink:0;user-select:none;border-bottom:1px solid #6a1a7a;border-radius:14px 14px 0 0;}
+#adm-drag-bar:active{cursor:grabbing}
+#adm-drag-bar .adm-title{font-size:12px;font-weight:bold;color:#c060c0;pointer-events:none}
+#adm-drag-bar .adm-controls{display:flex;gap:4px}
+#adm-drag-bar .adm-controls button{background:rgba(0,0,0,.3);border:1px solid #6a1a7a;border-radius:5px;color:#c060c0;font-size:12px;cursor:pointer;padding:2px 7px;line-height:1.4}
+#adm-drag-bar .adm-controls button:active{background:rgba(150,30,160,.3)}
+#adm-body{flex:1;overflow-y:auto;padding:10px;display:flex;flex-direction:column;gap:8px;}
+#adm-body.collapsed{display:none}
+#adm-resize{position:absolute;bottom:0;left:0;right:0;height:6px;cursor:ns-resize;background:transparent}
+#adm-resize-w{position:absolute;top:0;bottom:0;left:0;width:6px;cursor:ew-resize;background:transparent}
 #adm-popup{position:fixed;inset:0;z-index:8888;display:none;align-items:center;justify-content:center;pointer-events:none}
 #adm-popup.show{display:flex}
 .pm{max-width:80vw;word-break:break-word;text-align:center;border-radius:16px;padding:18px 24px;line-height:1.4;border:2px solid rgba(255,255,255,.3);pointer-events:auto;cursor:pointer}
@@ -144,13 +154,17 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
 
 <!-- ADMIN PANEL -->
 <div id="adm-panel">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
-    <span style="font-size:14px;font-weight:bold;color:#c060c0">👁 Admin Panel</span>
-    <div style="display:flex;gap:6px">
-      <button class="btn-bsm" onclick="showGlobalAdmin()" style="padding:5px 9px;font-size:11px">All Games</button>
-      <button onclick="toggleAdminPanel()" style="background:none;border:none;color:#6a3a7a;font-size:12px;cursor:pointer;text-decoration:underline">Hide</button>
+  <div id="adm-resize-w"></div>
+  <div id="adm-drag-bar">
+    <span class="adm-title">👁 Admin Panel</span>
+    <div class="adm-controls">
+      <button onclick="showGlobalAdmin()" title="All Games">⊞</button>
+      <button onclick="admCollapse()" id="adm-collapse-btn" title="Collapse/Expand">−</button>
+      <button onclick="admMinimize()" title="Minimize to button">_</button>
+      <button onclick="admReset()" title="Reset position">↺</button>
     </div>
   </div>
+  <div id="adm-body">
 
   <div class="ab">
     <div class="ah">📢 Broadcast Message</div>
@@ -209,6 +223,7 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
       <button class="btn-bsm" onclick="cheatEnd()">🏁 End Game</button>
       <button class="btn-rsm" onclick="cheatForceWin()">👑 Force Win Trick</button>
       <button class="btn-rsm" onclick="cheatNuke()">💣 Reset Bids</button>
+      <button class="btn-rsm" onclick="cheatUndoTrick()" style="background:#4a2a00;color:#f0c080;border:1px solid #7a4a00">↩ Undo Last Trick</button>
     </div>
   </div>
 
@@ -221,6 +236,8 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
     </div>
     <div id="adm-fake-status" style="font-size:11px;color:#6a3a7a;margin-top:6px;text-align:center"></div>
   </div>
+  </div><!-- end adm-body -->
+  <div id="adm-resize"></div>
 </div>
 
 <!-- CARD PICKER OVERLAY -->
@@ -260,7 +277,23 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
 <div id="s-bid" class="scr"><div class="gl"><div class="topbar"><div><div style="font-size:16px;font-weight:700;color:#d4af37" id="bid-rl"></div><div style="font-size:12px;color:var(--mut);margin-top:2px" id="bid-sub"></div><button onclick="confirmLeave()" style="margin-top:4px;background:none;border:none;color:#c44444;font-size:11px;cursor:pointer;padding:0;text-decoration:underline">Leave</button></div><div id="bid-trump"></div></div><div class="midbox"><div id="bid-notice"></div><div id="bid-main"></div><div id="bid-log"></div></div><div class="hbox"><div class="lbl" style="margin-bottom:6px;flex-shrink:0">your hand</div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden"><div class="fan" id="bid-fan"></div></div></div></div></div>
 <div id="s-play" class="scr"><div class="gl"><div class="topbar"><div><div id="play-hl"></div><button onclick="confirmLeave()" style="margin-top:3px;background:none;border:none;color:#c44444;font-size:11px;cursor:pointer;padding:0;text-decoration:underline">Leave</button></div><div id="play-trump"></div></div><div id="play-sbar"></div><div class="midbox"><div class="lbl" id="trick-lbl">CURRENT TRICK</div><div class="tg" id="play-trick"></div><div id="play-status" style="margin-top:7px"></div></div><div class="hbox"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;flex-shrink:0"><div class="lbl" style="margin-bottom:0" id="hand-lbl">your hand</div><div id="play-act"></div></div><div style="flex:1;min-height:0;display:flex;align-items:center;justify-content:center;overflow:hidden"><div class="fan" id="play-fan"></div></div></div></div></div>
 <div id="s-sum" class="scr"><div class="box" style="margin-top:12px"><div class="title" id="sum-title"></div><div class="sub" id="sum-sub"></div><div id="sum-rows"></div><div style="margin-top:10px"><div class="lbl">leaderboard</div><div id="sum-board"></div></div><div id="sum-act"></div><button class="btn-red" onclick="confirmLeave()">Leave Game</button></div></div>
-<div id="s-go" class="scr"><div class="box" style="margin-top:16px;text-align:center"><div style="font-size:50px;margin-bottom:5px">🏆</div><div class="title">Game Over!</div><div class="wbox" style="margin-top:12px"><div style="font-size:11px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">WINNER</div><div style="font-size:26px;font-weight:bold;color:#d4af37" id="go-win"></div><div style="font-size:16px;margin-top:4px" id="go-pts"></div></div><div id="go-board" style="text-align:left"></div><button class="btn" onclick="leaveGame()">New Game</button><button class="btn-ghost" onclick="showHighScores()" style="border-color:#2a5a4a;color:#5a9a7a">🏆 High Scores</button></div></div>
+<div id="s-go" class="scr"><div class="box" style="margin-top:16px;text-align:center">
+  <div style="font-size:50px;margin-bottom:5px">🏆</div>
+  <div class="title">Game Over!</div>
+  <div class="wbox" style="margin-top:12px">
+    <div style="font-size:11px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">WINNER</div>
+    <div style="font-size:26px;font-weight:bold;color:#d4af37" id="go-win"></div>
+    <div style="font-size:16px;margin-top:4px" id="go-pts"></div>
+  </div>
+  <div id="go-chart-wrap" style="margin:14px 0 6px;border:1px solid var(--g3);border-radius:12px;overflow:hidden;background:#060f0a">
+    <div style="font-size:10px;color:var(--mut);letter-spacing:1px;padding:8px 12px 0;text-align:left;text-transform:uppercase">Score Chart — All 15 Rounds</div>
+    <canvas id="go-chart" style="width:100%;display:block"></canvas>
+  </div>
+  <div id="go-board" style="text-align:left"></div>
+  <button class="btn" onclick="rematch()" style="background:linear-gradient(135deg,#2a7a4a,#1a5a34)">🔄 Rematch — Same Players</button>
+  <button class="btn-ghost" onclick="leaveGame()">New Game</button>
+  <button class="btn-ghost" onclick="showHighScores()" style="border-color:#2a5a4a;color:#5a9a7a">🏆 High Scores</button>
+</div></div>
 
 <!-- IRL -->
 <div id="s-irl-setup" class="scr"><div class="box" style="margin-top:14px"><div style="font-size:36px;text-align:center;margin-bottom:4px">🤝</div><div class="title">Play In Person</div><div class="sub">scorekeeper for around the table</div><div class="lbl">number of players</div><div class="dealer-sel" id="irl-pc-btns"></div><div class="lbl">player names</div><div id="irl-name-inputs"></div><button class="btn" onclick="irlStartGame()">Deal 'Em In →</button><button class="btn-ghost" onclick="irlShowContinue()">Continue a Game →</button><button class="btn-ghost" onclick="show('s-home')" style="color:var(--mut)">← Back</button></div></div>
@@ -269,7 +302,22 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
 <div id="s-irl-bid" class="scr"><div class="box" style="margin-top:12px"><div class="title">Bidding</div><div class="sub" id="irl-bid-sub"></div><div id="irl-bid-notice"></div><div id="irl-bid-main"></div><div id="irl-bid-log"></div><button class="btn-red" onclick="confirmIRLLeave()" style="margin-top:10px">Leave Game</button></div></div>
 <div id="s-irl-tricks" class="scr"><div class="box" style="margin-top:12px"><div class="title">Tricks Won</div><div style="text-align:center"><span class="badge" id="irl-tricks-badge"></span></div><div id="irl-tricks-rows"></div><button class="btn" id="irl-tricks-submit" onclick="irlFinishRound()">Calculate Scores →</button><button class="btn-red" onclick="confirmIRLLeave()">Leave Game</button></div></div>
 <div id="s-irl-sum" class="scr"><div class="box" style="margin-top:12px"><div class="title" id="irl-sum-title"></div><div class="sub" id="irl-sum-sub"></div><div id="irl-sum-rows"></div><div style="margin-top:10px"><div class="lbl">leaderboard</div><div id="irl-sum-board"></div></div><button class="btn" id="irl-sum-next" onclick="irlNextRound()"></button><button class="btn-red" onclick="confirmIRLLeave()">Leave Game</button></div></div>
-<div id="s-irl-go" class="scr"><div class="box" style="margin-top:16px;text-align:center"><div style="font-size:50px;margin-bottom:5px">🏆</div><div class="title">Game Over!</div><div class="wbox" style="margin-top:12px"><div style="font-size:11px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">WINNER</div><div style="font-size:26px;font-weight:bold;color:#d4af37" id="irl-go-win"></div><div style="font-size:16px;margin-top:4px" id="irl-go-pts"></div></div><div id="irl-go-board" style="text-align:left"></div><button class="btn" onclick="show('s-home')">New Game</button><button class="btn-ghost" onclick="showHighScores()" style="border-color:#2a5a4a;color:#5a9a7a">🏆 High Scores</button></div></div>
+<div id="s-irl-go" class="scr"><div class="box" style="margin-top:16px;text-align:center">
+  <div style="font-size:50px;margin-bottom:5px">🏆</div>
+  <div class="title">Game Over!</div>
+  <div class="wbox" style="margin-top:12px">
+    <div style="font-size:11px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">WINNER</div>
+    <div style="font-size:26px;font-weight:bold;color:#d4af37" id="irl-go-win"></div>
+    <div style="font-size:16px;margin-top:4px" id="irl-go-pts"></div>
+  </div>
+  <div id="irl-go-chart-wrap" style="margin:14px 0 6px;border:1px solid var(--g3);border-radius:12px;overflow:hidden;background:#060f0a">
+    <div style="font-size:10px;color:var(--mut);letter-spacing:1px;padding:8px 12px 0;text-align:left;text-transform:uppercase">Score Chart — All 15 Rounds</div>
+    <canvas id="irl-go-chart" style="width:100%;display:block"></canvas>
+  </div>
+  <div id="irl-go-board" style="text-align:left"></div>
+  <button class="btn" onclick="show('s-home')">New Game</button>
+  <button class="btn-ghost" onclick="showHighScores()" style="border-color:#2a5a4a;color:#5a9a7a">🏆 High Scores</button>
+</div></div>
 
 <!-- HIGH SCORES -->
 <div id="s-hs" class="scr"><div class="box" style="margin-top:14px"><div style="font-size:34px;text-align:center;margin-bottom:4px">🏆</div><div class="title">High Scores</div><div class="sub">all-time hall of fame</div><div style="display:flex;border:1px solid var(--g3);border-radius:10px;overflow:hidden;margin-bottom:14px"><button id="hs-tab-top" class="hs-tab active" onclick="hsTab('top')">Top Scores</button><button id="hs-tab-wins" class="hs-tab" onclick="hsTab('wins')">Most Wins</button><button id="hs-tab-recent" class="hs-tab" onclick="hsTab('recent')">Recent</button></div><div id="hs-content"><div style="text-align:center;color:var(--mut);padding:20px">Loading...</div></div><button class="btn-ghost" onclick="show('s-home')" style="margin-top:10px">← Back</button></div></div>
@@ -339,12 +387,103 @@ function buildFan(elId,cards,playable,lead,myHand){const el=G(elId);if(!el)retur
 function makePips(roundIdx,elId){const d=G(elId);if(!d)return;d.innerHTML='';ROUNDS.forEach((n,i)=>{const p=document.createElement('div');p.className='pip';const done=i<roundIdx,cur=i===roundIdx;p.style.cssText=`width:${cur?26:16}px;height:${cur?26:16}px;background:${done?'#1a5a35':cur?'#d4af37':'#0e2a1c'};border:${cur?'none':'1px solid #1a4a2e'};font-size:${cur?10:8}px;color:${done?'#7ec8a0':cur?'#060f0a':'#2a6040'}`;p.textContent=n;d.appendChild(p);});}
 
 // ── OPTIMAL BID ──────────────────────────────────────────────────────────────
-function optimalBid(hand,trump,cc,n){
+// ── OPTIMAL BID (full-information — uses all known hands) ────────────────────
+function optimalBid(hand, trump, cc, n, allHands){
+  // Base win probability lookup
   const TW={A:1.0,K:0.88,Q:0.74,J:0.60,T:0.46,'9':0.34,'8':0.24,'7':0.16,'6':0.10,'5':0.07,'4':0.04,'3':0.02,'2':0.01};
   const nf=cc<=3?0.18:cc<=6?0.30:0.42;
   const NW={A:nf,K:nf*0.65,Q:nf*0.38,J:nf*0.20,T:nf*0.10};
-  let exp=0;hand.forEach(card=>{exp+=cs(card)===trump?(TW[cv(card)]||0.01):(NW[cv(card)]||0);});
+
+  if(!allHands||Object.keys(allHands).length<=1){
+    // fallback: no other hand info
+    let exp=0;hand.forEach(c=>{exp+=cs(c)===trump?(TW[cv(c)]||0.01):(NW[cv(c)]||0);});
+    return Math.round(exp);
+  }
+
+  // Full-information: for each card we hold, simulate how likely it beats all others
+  const otherHands=Object.values(allHands).filter(h=>h!==hand);
+  let exp=0;
+
+  hand.forEach(card=>{
+    const suit=cs(card),val=cv(card),num=cn(card);
+    const isTrump=suit===trump;
+
+    if(isTrump){
+      // prob of winning: fraction of other players who DON'T have a higher trump
+      let pWin=1;
+      otherHands.forEach(oh=>{
+        const theirTrumps=oh.filter(c=>cs(c)===trump&&cn(c)>num);
+        // If they have at least one higher trump, chance they play it ~ 60%
+        if(theirTrumps.length>0) pWin*=0.4;
+      });
+      exp+=pWin;
+    } else {
+      // Non-trump: wins only if nobody trumps AND no one has a higher card of same suit
+      let pNoTrump=1, pHigher=1;
+      otherHands.forEach(oh=>{
+        const theirTrumps=oh.filter(c=>cs(c)===trump);
+        const theirSuit=oh.filter(c=>cs(c)===suit);
+        const hasSuit=theirSuit.length>0;
+        // if they have suit cards, they must follow — but do they beat it?
+        if(hasSuit){
+          const hasHigher=theirSuit.some(c=>cn(c)>num);
+          if(hasHigher) pHigher*=0.3; // likely to play higher
+        } else {
+          // void in suit — will they trump? more likely if they have trump
+          if(theirTrumps.length>0) pNoTrump*=0.35;
+        }
+      });
+      exp+=pNoTrump*pHigher;
+    }
+  });
+
   return Math.round(exp);
+}
+
+// ── BEST CARD TO PLAY (admin advisor during tricks) ───────────────────────────
+function bestCardToPlay(hand, lead, trump, trickCards, playerOrder, bids, tricksWon, tricksDone, cc, allHands){
+  const playable=hand.filter(c=>canPlay(c,hand,lead));
+  if(!playable.length)return null;
+
+  const myBid=bids[playerOrder.find(id=>ph(allHands?.[id]||'').join(',')===hand.join(','))]||0;
+  const myWon=tricksWon[playerOrder.find(id=>ph(allHands?.[id]||'').join(',')===hand.join(','))]||0;
+  const remaining=cc-tricksDone;
+  const stillNeed=Math.max(0,myBid-myWon);
+  const mustAvoid=myWon>=myBid&&remaining>0; // already at bid — try to lose
+
+  // score each playable card
+  const scored=playable.map(card=>{
+    const suit=cs(card),num=cn(card);
+    const isTrump=suit===trump;
+    const isLead=suit===lead;
+    let winProb=0;
+
+    if(!lead){
+      // we're leading
+      if(isTrump) winProb=0.6+num*0.03;
+      else winProb=isLead?num*0.05:0.1;
+    } else {
+      // following
+      const currentWin=Object.keys(trickCards).length?trickWinner(trickCards,playerOrder.filter(id=>trickCards[id]),lead,trump):null;
+      const currentBest=currentWin?trickCards[currentWin]:null;
+      if(isTrump&&lead!==trump){
+        const alreadyTrumped=Object.values(trickCards).some(c=>cs(c)===trump);
+        if(!alreadyTrumped) winProb=0.65+num*0.02;
+        else winProb=currentBest&&cs(currentBest)===trump&&cn(currentBest)<num?0.7:0.15;
+      } else if(isLead){
+        winProb=currentBest&&cs(currentBest)===lead&&cn(currentBest)<num?0.6:0.1;
+      } else {
+        winProb=0.02; // discard
+      }
+    }
+
+    // adjust for strategy
+    let score=mustAvoid?(1-winProb)*10+num*0.01:(stillNeed>0?winProb*10-num*0.01:winProb<0.15?5:winProb*5);
+    return{card,winProb,score};
+  });
+
+  scored.sort((a,b)=>b.score-a.score);
+  return scored[0];
 }
 
 // ── BOT SYSTEM ───────────────────────────────────────────────────────────────
@@ -431,21 +570,232 @@ async function dealAndBid(){
   await upd({phase:'bidding',hands,bids,bidStep:0,trumpCard,trumpSuit,tricksWon:tw,tricksDone:0,trickLeader:fl,trickTurn:fl,trickCards:null,trickLeadSuit:null,trickComplete:null,trickWinner:null,lastTrickCards:null,handPresets:null});
 }
 async function placeBid(val){const o=gs.playerOrder,n=o.length,ns=gs.bidStep+1;const ch={[`bids/${myId}`]:val};if(ns>=n){const fl=o[(gs.dealerIdx+1)%n];ch.phase='playing';ch.bidStep=ns;ch.trickLeader=fl;ch.trickTurn=fl;}else ch.bidStep=ns;await upd(ch);}
-async function playCard(card){const s=gs;if(s.trickTurn!==myId||s.trickComplete)return;const myHand=ph(s.hands?.[myId]);if(!canPlay(card,myHand,s.trickLeadSuit))return;const newHand=myHand.filter(c=>c!==card),newTrick={...(s.trickCards||{}),[myId]:card};const n=s.playerOrder.length,played=Object.keys(newTrick).length,thisLead=s.trickLeadSuit||cs(card);const ch={[`hands/${myId}`]:newHand.join(','),[`trickCards/${myId}`]:card,trickLeadSuit:thisLead};if(played===n){const win=trickWinner(newTrick,s.playerOrder,thisLead,s.trumpSuit);const tw={...(s.tricksWon||{})};s.playerOrder.forEach(id=>{if(!tw[id])tw[id]=0;});tw[win]=(tw[win]||0)+1;ch.trickWinner=win;ch.trickComplete=true;ch.tricksWon=tw;ch.tricksDone=(s.tricksDone||0)+1;ch.lastTrickCards=newTrick;ch.lastTrickLead=thisLead;}else{const ord=tOrd(s.playerOrder,s.trickLeader);ch.trickTurn=ord[ord.indexOf(myId)+1];}await upd(ch);}
+async function playCard(card){
+  const s=gs;if(s.trickTurn!==myId||s.trickComplete)return;
+  const myHand=ph(s.hands?.[myId]);if(!canPlay(card,myHand,s.trickLeadSuit))return;
+  const newHand=myHand.filter(c=>c!==card),newTrick={...(s.trickCards||{}),[myId]:card};
+  const n=s.playerOrder.length,played=Object.keys(newTrick).length,thisLead=s.trickLeadSuit||cs(card);
+  const ch={[`hands/${myId}`]:newHand.join(','),[`trickCards/${myId}`]:card,trickLeadSuit:thisLead};
+  if(played===n){
+    // Save full snapshot BEFORE resolving so admin can undo
+    const snapshot={
+      hands:{...s.hands,[myId]:newHand.join(',')},
+      tricksWon:{...(s.tricksWon||{})},
+      tricksDone:s.tricksDone||0,
+      trickLeader:s.trickLeader,
+      trickTurn:s.trickTurn,
+      trickCards:newTrick,
+      trickLeadSuit:thisLead,
+      trickComplete:false,
+      trickWinner:null,
+      ts:Date.now()
+    };
+    const log=[...(s.trickLog||[])];
+    if(log.length>8)log.shift(); // keep last 8 tricks only
+    log.push(snapshot);
+    ch.trickLog=log;
+    const win=trickWinner(newTrick,s.playerOrder,thisLead,s.trumpSuit);
+    const tw={...(s.tricksWon||{})};s.playerOrder.forEach(id=>{if(!tw[id])tw[id]=0;});
+    tw[win]=(tw[win]||0)+1;
+    ch.trickWinner=win;ch.trickComplete=true;ch.tricksWon=tw;
+    ch.tricksDone=(s.tricksDone||0)+1;ch.lastTrickCards=newTrick;ch.lastTrickLead=thisLead;
+  } else {
+    const ord=tOrd(s.playerOrder,s.trickLeader);ch.trickTurn=ord[ord.indexOf(myId)+1];
+  }
+  await upd(ch);
+}
 async function startNextTrick(){const w=gs.trickWinner;await upd({trickCards:null,trickLeadSuit:null,trickComplete:null,trickWinner:null,trickLeader:w,trickTurn:w});}
-async function finishRound(){const o=gs.playerOrder,lB={...gs.bids},lW={...gs.tricksWon},lS={};const ch={phase:'summary',lastBids:lB,lastWon:lW};o.forEach(id=>{const sc=calcScore(lB[id]||0,lW[id]||0);lS[id]=sc;ch[`players/${id}/score`]=(gs.players[id].score||0)+sc;});ch.lastScores=lS;await upd(ch);}
+async function finishRound(){
+  const o=gs.playerOrder,lB={...gs.bids},lW={...gs.tricksWon},lS={};
+  const ch={phase:'summary',lastBids:lB,lastWon:lW};
+  const newScores={};
+  o.forEach(id=>{
+    const sc=calcScore(lB[id]||0,lW[id]||0);
+    lS[id]=sc;
+    newScores[id]=(gs.players[id].score||0)+sc;
+    ch[`players/${id}/score`]=newScores[id];
+  });
+  ch.lastScores=lS;
+  // append this round's cumulative scores to history
+  const hist=[...(gs.scoreHistory||[])];
+  const snap={};o.forEach(id=>snap[id]=newScores[id]);
+  hist.push(snap);
+  ch.scoreHistory=hist;
+  await upd(ch);
+}
 async function nextRound(){if(gs.roundIdx===14){await upd({phase:'gameover'});return;}const o=gs.playerOrder,nr=gs.roundIdx+1,nd=(gs.dealerIdx+1)%o.length;await upd({phase:'roundIntro',roundIdx:nr,dealerIdx:nd,bidStep:0,tricksDone:0,trickCards:null,trickComplete:null,trickWinner:null,trickLeadSuit:null,lastTrickCards:null});}
 function leaveGame(){if(gameRef)gameRef.off();sessionStorage.removeItem('udtr_code');gs={};isAdmin=false;G('adm-hide').classList.remove('show');G('adm-panel').classList.remove('open');show('s-home');}
 function confirmLeave(){if(confirm('Leave this game?'))leaveGame();}
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
 function render(s){const map={lobby:'s-lobby',roundIntro:'s-ri',bidding:'s-bid',playing:'s-play',summary:'s-sum',gameover:'s-go'};const id=map[s.phase];if(id)show(id);if(s.phase==='lobby')rLobby(s);else if(s.phase==='roundIntro')rRI(s);else if(s.phase==='bidding')rBid(s);else if(s.phase==='playing')rPlay(s);else if(s.phase==='summary')rSum(s);else if(s.phase==='gameover')rGO(s);checkFakeLoading(s);}
-function rLobby(s){const el=G('lob-code');el.textContent=gameCode;el.onclick=()=>{navigator.clipboard.writeText(gameCode).catch(()=>{});el.textContent='Copied!';setTimeout(()=>el.textContent=gameCode,1500);};const pl=G('lob-players');pl.innerHTML='';(s.playerOrder||[]).filter(id=>!isBot(id)).forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+you(id)+'</span>'+(id===s.hostId?'<span style="color:#d4af37;font-size:12px">HOST</span>':'');pl.appendChild(r);});const botIds=(s.playerOrder||[]).filter(isBot),bots=s.bots||{};const bl=G('lob-bots');bl.innerHTML='';if(botIds.length){bl.innerHTML='<div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin:8px 0 4px;text-transform:uppercase">AI Bots</div>';botIds.forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+'<span class="bot-badge">'+(bots[id]||'?')+'</span></span>';bl.appendChild(r);});}const humanCount=(s.playerOrder||[]).filter(id=>!isBot(id)).length,act=G('lob-act');act.innerHTML='';if(amHost()){const need=Math.max(0,4-humanCount);let html='';if(need>0)html+='<div class="ni" style="margin-bottom:10px">'+need+' AI bot'+(need!==1?'s':'')+' will fill empty spots</div>';if(humanCount>=2||need>0){if(need>0){html+='<div class="lbl">Bot difficulties</div>';for(let i=0;i<need;i++){html+=`<div class="arow" style="margin-bottom:6px"><span style="color:var(--mut);font-size:13px">Bot ${i+1}</span><select class="bot-diff-sel" style="padding:5px 8px;font-size:12px;border:1px solid var(--g3);border-radius:7px;background:var(--g1);color:var(--txt);width:auto"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>`;}}html+='<button class="btn" onclick="startGame()">Start Game →</button>';}else html='<div class="wait">Need 2+ players...</div>';act.innerHTML=html;}else act.innerHTML='<div class="wait">Waiting for host...</div>';}
+function rLobby(s){const el=G('lob-code');el.textContent=gameCode;el.onclick=()=>{navigator.clipboard.writeText(gameCode).catch(()=>{});el.textContent='Copied!';setTimeout(()=>el.textContent=gameCode,1500);};const pl=G('lob-players');pl.innerHTML='';(s.playerOrder||[]).filter(id=>!isBot(id)).forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+you(id)+'</span>'+(id===s.hostId?'<span style="color:#d4af37;font-size:12px">HOST</span>':'');pl.appendChild(r);});const botIds=(s.playerOrder||[]).filter(isBot),bots=s.bots||{};const bl=G('lob-bots');bl.innerHTML='';if(botIds.length){bl.innerHTML='<div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin:8px 0 4px;text-transform:uppercase">AI Bots</div>';botIds.forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+'<span class="bot-badge">'+(bots[id]||'?')+'</span></span>';bl.appendChild(r);});}const humanCount=(s.playerOrder||[]).filter(id=>!isBot(id)).length,act=G('lob-act');let ahtml=s.rematch?'<div class="nok" style="margin-bottom:10px">🔄 Rematch — same players, fresh scores!</div>':'';if(amHost()){const need=Math.max(0,4-humanCount);if(need>0)ahtml+='<div class="ni" style="margin-bottom:10px">'+need+' AI bot'+(need!==1?'s':'')+' will fill empty spots</div>';if(humanCount>=2||need>0){if(need>0){ahtml+='<div class="lbl">Bot difficulties</div>';for(let i=0;i<need;i++){ahtml+=`<div class="arow" style="margin-bottom:6px"><span style="color:var(--mut);font-size:13px">Bot ${i+1}</span><select class="bot-diff-sel" style="padding:5px 8px;font-size:12px;border:1px solid var(--g3);border-radius:7px;background:var(--g1);color:var(--txt);width:auto"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>`;}}ahtml+='<button class="btn" onclick="startGame()">Start Game →</button>';}else ahtml+='<div class="wait">Need 2+ players...</div>';}else ahtml+='<div class="wait">Waiting for host...</div>';act.innerHTML=ahtml;}
 function rRI(s){const cc=ROUNDS[s.roundIdx],o=s.playerOrder;G('ri-title').textContent='Round '+(s.roundIdx+1);makePips(s.roundIdx,'ri-pips');G('ri-cards').textContent=cc;const sc=G('ri-scores');sc.innerHTML='';o.forEach(id=>{const r=document.createElement('div');r.className='row';const bot=isBot(id)?`<span class="bot-badge">${(s.bots||{})[id]||'bot'}</span>`:'';r.innerHTML='<span>'+pname(s,id)+you(id)+bot+'</span><span style="color:#d4af37;font-weight:bold">'+(s.players[id].score||0)+' pts</span>';sc.appendChild(r);});const dealer=o[s.dealerIdx],first=o[(s.dealerIdx+1)%o.length];const act=G('ri-act');act.innerHTML='<div class="ib" style="margin-top:10px"><div class="row"><span style="color:var(--mut)">Dealer</span><span style="color:#d4af37;font-weight:bold">'+pname(s,dealer)+(isBot(dealer)?'<span class="bot-badge">bot</span>':'')+'</span></div><div class="row" style="border:none;padding-bottom:0"><span style="color:var(--mut)">Bids first</span><span style="font-weight:bold">'+pname(s,first)+(isBot(first)?'<span class="bot-badge">bot</span>':'')+'</span></div></div>';if(amHost())act.innerHTML+='<button class="btn" onclick="dealAndBid()" style="margin-top:6px">Deal Cards →</button>';else act.innerHTML+='<div class="wait" style="margin-top:10px">Waiting for host to deal...</div>';}
 function rBid(s){const cc=ROUNDS[s.roundIdx],o=s.playerOrder,n=o.length,bo=tOrd(o,o[(s.dealerIdx+1)%n]);const curr=bo[s.bidStep],isMe=curr===myId,isDealer=s.bidStep===n-1;const tot=o.reduce((sum,id)=>{const b=(s.bids||{})[id];return sum+(b>=0?b:0);},0);const isEx=cc<=3,restr=(()=>{if(isEx||!isDealer)return null;const r=cc-tot;return(r>=0&&r<=cc)?r:null;})();G('bid-rl').onclick=secretTap;G('bid-rl').textContent='Round '+(s.roundIdx+1)+' — Bidding';G('bid-sub').textContent=cc+' cards · '+(s.bidStep+1)+' of '+n;G('bid-trump').innerHTML=mkTH(s.trumpSuit,s.trumpCard);const notice=G('bid-notice');notice.innerHTML='';if(isMe&&restr!==null)notice.innerHTML='<div class="nw">⚠️ Cannot bid <strong>'+restr+'</strong> — dealer restriction</div>';const main=G('bid-main');main.innerHTML='';if(isMe){const myHand=ph(s.hands?.[myId]),recBid=optimalBid(myHand,s.trumpSuit,cc,n);let h='<div style="text-align:center;margin:4px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">'+(isDealer?'YOUR BID (DEALER)':'YOUR BID')+'</div><div style="font-size:22px;font-weight:bold;color:#d4af37">'+pname(s,myId)+'</div><div style="color:var(--mut);font-size:12px;margin-top:2px">How many tricks will you win?</div><div style="font-size:11px;color:#5a9acc;margin-top:4px">💡 Suggested: <strong style="color:#7ec8a0">'+recBid+'</strong></div></div><div class="bid-grid">';for(let i=0;i<=cc;i++){const off=i===restr,rec=i===recBid;h+='<button class="bid-btn"'+(off?' disabled':'')+' onclick="placeBid('+i+')" style="'+(rec?'border-color:#7ec8a0;box-shadow:0 0 8px rgba(126,200,160,.35)':'')+'">'+i+(off?'<span style="position:absolute;top:2px;right:4px;font-size:9px;color:#7a4a00">✕</span>':'')+(rec?'<span style="position:absolute;bottom:2px;right:3px;font-size:7px;color:#7ec8a0">✓</span>':'')+'</button>';}h+='</div>';main.innerHTML=h;}else if(isBot(curr)){main.innerHTML='<div style="text-align:center;padding:10px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:5px">BOT BIDDING</div><div style="font-size:22px;font-weight:bold;color:#8090e0">'+pname(s,curr)+'</div><div style="color:var(--mut);font-size:12px;margin-top:3px">thinking...</div></div>';}else{main.innerHTML='<div style="text-align:center;padding:10px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:5px">WAITING FOR</div><div style="font-size:22px;font-weight:bold;color:#d4af37">'+pname(s,curr)+'</div><div style="color:var(--mut);font-size:12px;margin-top:3px">to bid...</div></div>';}const log=G('bid-log');log.innerHTML='';if(o.some(id=>(s.bids||{})[id]>=0)){let h='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">';bo.forEach(id=>{const b=(s.bids||{})[id];if(b>=0)h+='<div style="background:#0a1a10;border:1px solid var(--g3);border-radius:7px;padding:4px 10px;font-size:13px"><span style="color:'+(isBot(id)?'#8090e0':'#b0c8c0')+'">'+pname(s,id)+'</span> <strong style="color:#d4af37">'+b+'</strong></div>';});h+='</div>';log.innerHTML=h;}requestAnimationFrame(()=>buildFan('bid-fan',sortH(ph(s.hands?.[myId]),s.trumpSuit),false,null,ph(s.hands?.[myId])));}
 function rPlay(s){const cc=ROUNDS[s.roundIdx],tC=s.trickCards||{},tW=s.tricksWon||{},myHand=ph(s.hands?.[myId]);const isMe=s.trickTurn===myId,isDone=!!s.trickComplete,lead=s.trickLeadSuit;const tn=Math.min((s.tricksDone||0)+(isDone?0:1),cc);const ord=tOrd(s.playerOrder,s.trickLeader||s.playerOrder[0]),dc=isDone?(s.lastTrickCards||tC):tC;G('play-hl').innerHTML='<div style="font-size:15px;font-weight:700;color:#d4af37">Round '+(s.roundIdx+1)+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">Trick '+tn+' of '+cc+(lead?' · Lead: <span style="color:'+SC[lead]+';font-weight:bold">'+SYM[lead]+'</span>':'')+'</div>';G('play-trump').innerHTML=mkTH(s.trumpSuit,null);let sb='<div class="sbar" onclick="secretTap()">';s.playerOrder.forEach(id=>{const bid=(s.bids||{})[id]||0,won=tW[id]||0,ex=won===bid,ov=won>bid;sb+='<div class="sbi"><div class="sbn">'+(isBot(id)?'🤖':'')+pname(s,id)+'</div><div class="sbv '+(ex?'ex':ov?'ov':'')+'">'+won+'/'+bid+'</div></div>';});sb+='</div>';G('play-sbar').innerHTML=sb;G('trick-lbl').textContent=isDone?'TRICK RESULT':'CURRENT TRICK';const tEl=G('play-trick');tEl.innerHTML='';tEl.style.gridTemplateColumns=`repeat(${Math.min(s.playerOrder.length,4)},1fr)`;ord.forEach(id=>{const p=s.players[id];if(!p)return;const card=dc[id],isW=isDone&&s.trickWinner===id;const cell=document.createElement('div');cell.className='tc'+(isW?' win':'')+(id===myId?' me':'');cell.innerHTML='<div class="pn">'+(isW?'👑 ':isBot(id)?'🤖 ':'')+p.name+'</div>'+(card?mkC(card,'',null):mkSlot());tEl.appendChild(cell);});let st='';if(isDone){st='<div class="nok">'+(s.trickWinner===myId?'🎉 You win this trick!':pname(s,s.trickWinner)+' wins this trick!')+'</div>';}else if(isMe){const hasL=lead&&myHand.some(c=>cs(c)===lead);st='<div class="ni">'+(lead?'Must follow <span style="color:'+SC[lead]+';font-weight:bold">'+SYM[lead]+'</span>'+(hasL?' — you have it':' — void, play anything'):'Your lead — play any card')+'</div>';}else if(isBot(s.trickTurn)){st='<div style="text-align:center;font-size:13px;color:#8090e0">🤖 <strong>'+pname(s,s.trickTurn)+'</strong> is thinking...</div>';}else{st='<div style="text-align:center;font-size:13px;color:var(--mut)">Waiting for <strong style="color:#d4af37">'+pname(s,s.trickTurn)+'</strong>...</div>';}G('play-status').innerHTML=st;let act='';if(isDone){const allDone=(s.tricksDone||0)>=cc;if(allDone)act=amHost()?'<button class="btn-sm" onclick="finishRound()">Score Round →</button>':'<span style="font-size:12px;color:var(--mut)">Waiting for host...</span>';else if(!isBot(s.trickWinner))act=s.trickWinner===myId?'<button class="btn-sm" onclick="startNextTrick()">Lead Next →</button>':'<span style="font-size:12px;color:var(--mut)">Waiting for '+pname(s,s.trickWinner)+'...</span>';}G('play-act').innerHTML=act;G('hand-lbl').textContent='your hand ('+myHand.length+')';const fe=G('play-fan');if(!isDone&&myHand.length>0){requestAnimationFrame(()=>buildFan('play-fan',sortH(myHand,s.trumpSuit),isMe,lead,myHand));}else{fe.innerHTML='<div style="color:var(--mut);font-size:13px;padding:10px 0">'+(isDone?'Trick played — waiting...':'No cards left')+'</div>';fe.style.width='';fe.style.height='';}}
 function rSum(s){G('sum-title').textContent='Round '+(s.roundIdx+1)+' Results';G('sum-sub').textContent=s.roundIdx<14?(14-s.roundIdx)+' rounds remaining':'Final round!';const rows=G('sum-rows');rows.innerHTML='';(s.playerOrder||[]).forEach(id=>{const p=s.players[id];if(!p)return;const bid=(s.lastBids||{})[id]||0,w=(s.lastWon||{})[id]||0,gv=(s.lastScores||{})[id]||0,hit=w===bid,over=w>bid;const bot=isBot(id)?'<span class="bot-badge">bot</span>':'';const row=document.createElement('div');row.className='row';row.style.padding='11px 0';row.innerHTML='<div style="flex:1"><div style="font-weight:bold;font-size:15px">'+p.name+you(id)+bot+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">bid <strong style="color:var(--txt)">'+bid+'</strong> · won <strong style="color:var(--txt)">'+w+'</strong> · <span style="color:'+(hit?'#7ec8a0':over?'#d4a045':'#c44444')+'">'+(hit?'✓ Exact!':over?'▲ Over':'✗ Under')+'</span></div></div><div style="text-align:right;margin-left:10px"><div style="font-size:20px;font-weight:bold;color:'+(gv>0?'#d4af37':'#5a4a4a')+'">+'+gv+'</div><div style="font-size:11px;color:var(--mut)">'+p.score+' total</div></div>';rows.appendChild(row);});const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);const board=G('sum-board');board.innerHTML='';sorted.forEach(({id,sc,n},r)=>{const bot=isBot(id)?'🤖':'';const row=document.createElement('div');row.className='row';row.innerHTML='<span style="color:'+(r===0?'#d4af37':'#b0c8c0')+';font-size:14px">'+MEDALS[r]+' '+bot+n+you(id)+'</span><span style="font-weight:bold;color:'+(r===0?'#d4af37':'var(--txt)')+'">'+sc+'</span>';board.appendChild(row);});const act=G('sum-act');act.innerHTML='';if(amHost())act.innerHTML='<button class="btn" onclick="nextRound()" style="margin-top:10px">'+(s.roundIdx===14?'Final Results 🏆':'Next Round →')+'</button>';else act.innerHTML='<div class="wait" style="margin-top:10px">Waiting for host...</div>';}
-function rGO(s){const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);G('go-win').textContent=sorted[0].n+(sorted[0].id===myId?' 🎉':'');G('go-pts').textContent=sorted[0].sc+' points';const board=G('go-board');board.innerHTML='';sorted.slice(1).forEach(({id,sc,n},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="font-size:14px">'+(isBot(id)?'🤖':'')+MEDALS[r+1]+' '+n+you(id)+'</span><span style="font-weight:bold;color:#d4af37">'+sc+' pts</span>';board.appendChild(row);});if(amHost()&&!s.hsSaved)saveOnlineHS(s);}
+function rGO(s){
+  const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[id].score,n:s.players[id].name})).sort((a,b)=>b.sc-a.sc);
+  G('go-win').textContent=sorted[0].n+(sorted[0].id===myId?' 🎉':'');
+  G('go-pts').textContent=sorted[0].sc+' points';
+  const board=G('go-board');board.innerHTML='';
+  sorted.slice(1).forEach(({id,sc,n},r)=>{
+    const row=document.createElement('div');row.className='row';
+    row.innerHTML='<span style="font-size:14px">'+(isBot(id)?'🤖':'')+MEDALS[r+1]+' '+n+you(id)+'</span><span style="font-weight:bold;color:#d4af37">'+sc+' pts</span>';
+    board.appendChild(row);
+  });
+  if(amHost()&&!s.hsSaved)saveOnlineHS(s);
+  // build score history from Firebase data or reconstruct
+  const hist=s.scoreHistory||[];
+  const names={};(s.playerOrder||[]).forEach(id=>names[id]=s.players[id]?.name||'?');
+  setTimeout(()=>drawScoreChart('go-chart',s.playerOrder.filter(id=>!isBot(id)),names,hist),200);
+}
+
+// ── SCORE CHART ENGINE ────────────────────────────────────────────────────────
+const CHART_COLORS=['#d4af37','#5a9acc','#c060c0','#7ec8a0','#e07a40','#a06ac0','#e06060','#60c0a0'];
+
+function drawScoreChart(canvasId, playerIds, names, history){
+  const canvas=G(canvasId);if(!canvas)return;
+  const wrap=canvas.parentElement;
+  const W=wrap.clientWidth||340;
+  const H=Math.round(W*0.52);
+  canvas.width=W;canvas.height=H;
+  canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');
+  if(!ctx)return;
+
+  const PAD={top:18,right:56,bottom:30,left:40};
+  const cW=W-PAD.left-PAD.right;
+  const cH=H-PAD.top-PAD.bottom;
+
+  if(!history||history.length===0){
+    ctx.fillStyle='#2a4a3a';ctx.font='13px sans-serif';ctx.textAlign='center';
+    ctx.fillText('No round data recorded',W/2,H/2);return;
+  }
+
+  // build cumulative data — prepend round 0 (everyone at 0)
+  const rounds=[...history];
+  const allPoints=[[...playerIds.map(id=>({id,v:0}))]]; // start at 0
+  rounds.forEach(snap=>{
+    allPoints.push(playerIds.map(id=>({id,v:snap[id]||0})));
+  });
+  const totalRounds=allPoints.length-1; // 0 through N
+  const maxScore=Math.max(...allPoints.flat().map(p=>p.v),1);
+
+  function xPos(round){return PAD.left+round*(cW/Math.max(totalRounds,1));}
+  function yPos(score){return PAD.top+cH-(score/maxScore)*cH;}
+
+  // draw grid
+  function drawGrid(){
+    ctx.clearRect(0,0,W,H);
+    ctx.strokeStyle='#1a3a2a';ctx.lineWidth=1;
+    const steps=4;
+    for(let i=0;i<=steps;i++){
+      const y=PAD.top+i*(cH/steps);
+      ctx.beginPath();ctx.moveTo(PAD.left,y);ctx.lineTo(PAD.left+cW,y);ctx.stroke();
+      const val=Math.round(maxScore*(1-i/steps));
+      ctx.fillStyle='#3a6a4a';ctx.font='9px sans-serif';ctx.textAlign='right';
+      ctx.fillText(val,PAD.left-4,y+3);
+    }
+    // round markers
+    for(let r=0;r<=totalRounds;r++){
+      const x=xPos(r);
+      ctx.strokeStyle='#0e2a1a';ctx.lineWidth=1;
+      ctx.beginPath();ctx.moveTo(x,PAD.top);ctx.lineTo(x,PAD.top+cH);ctx.stroke();
+      if(r>0&&(totalRounds<=8||r%2===0||r===totalRounds)){
+        ctx.fillStyle='#3a5a4a';ctx.font='9px sans-serif';ctx.textAlign='center';
+        ctx.fillText('R'+r,x,PAD.top+cH+12);
+      }
+    }
+    ctx.strokeStyle='#2a5a3a';ctx.lineWidth=1.5;
+    ctx.strokeRect(PAD.left,PAD.top,cW,cH);
+  }
+
+  // animated draw — sweeps from left to right round by round
+  let frame=0;
+  const FRAMES_PER_ROUND=22;
+  const totalFrames=totalRounds*FRAMES_PER_ROUND+30;
+  let animId=null;
+
+  function drawFrame(f){
+    drawGrid();
+    const roundProgress=f/FRAMES_PER_ROUND; // how many rounds drawn so far
+    const fullRounds=Math.floor(roundProgress);
+    const partial=roundProgress-fullRounds;
+
+    playerIds.forEach((id,pi)=>{
+      const col=CHART_COLORS[pi%CHART_COLORS.length];
+      ctx.strokeStyle=col;ctx.lineWidth=2;ctx.lineJoin='round';
+      ctx.shadowColor=col;ctx.shadowBlur=4;
+      ctx.beginPath();
+      let started=false;
+      for(let r=0;r<=Math.min(fullRounds,totalRounds);r++){
+        const x=xPos(r),y=yPos(allPoints[r].find(p=>p.id===id)?.v||0);
+        if(!started){ctx.moveTo(x,y);started=true;}else ctx.lineTo(x,y);
+        // dot at each round point
+        if(r<=fullRounds){
+          ctx.save();ctx.shadowBlur=0;ctx.fillStyle=col;ctx.beginPath();ctx.arc(x,y,3,0,Math.PI*2);ctx.fill();ctx.restore();
+        }
+      }
+      // partial next segment
+      if(partial>0&&fullRounds<totalRounds){
+        const r0=fullRounds,r1=fullRounds+1;
+        const v0=allPoints[r0].find(p=>p.id===id)?.v||0;
+        const v1=allPoints[r1].find(p=>p.id===id)?.v||0;
+        const x=xPos(r0)+(xPos(r1)-xPos(r0))*partial;
+        const y=yPos(v0+(v1-v0)*partial);
+        ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+      ctx.shadowBlur=0;
+    });
+
+    // draw labels at current endpoint
+    const labelAt=Math.min(fullRounds,totalRounds);
+    const labelScores=playerIds.map(id=>({id,v:allPoints[labelAt].find(p=>p.id===id)?.v||0}));
+    // sort by score to avoid overlap
+    const sorted=[...labelScores].sort((a,b)=>b.v-a.v);
+    const usedY=[];
+    sorted.forEach(({id,v})=>{
+      const pi=playerIds.indexOf(id);
+      const col=CHART_COLORS[pi%CHART_COLORS.length];
+      let rawY=yPos(v);
+      // nudge to avoid overlap
+      let ny=rawY;
+      usedY.forEach(uy=>{if(Math.abs(ny-uy)<12)ny=uy+12;});
+      usedY.push(ny);
+      ctx.fillStyle=col;ctx.font='bold 10px sans-serif';ctx.textAlign='left';
+      ctx.shadowColor=col;ctx.shadowBlur=3;
+      ctx.fillText((names[id]||'?').slice(0,10),xPos(labelAt)+5,ny+3);
+      ctx.shadowBlur=0;
+    });
+
+    // surge flash — highlight overtakes
+    if(fullRounds>=2&&partial<0.3){
+      const prev=allPoints[fullRounds-1]||[];const curr2=allPoints[fullRounds]||[];
+      playerIds.forEach((id,pi)=>{
+        const pv=prev.find(p=>p.id===id)?.v||0;
+        const cv=curr2.find(p=>p.id===id)?.v||0;
+        // big score jump
+        if(cv-pv>=20){
+          const x=xPos(fullRounds),y=yPos(cv);
+          const alpha=Math.max(0,0.9-(partial*3));
+          ctx.fillStyle=`rgba(212,175,55,${alpha})`;ctx.font='bold 11px sans-serif';ctx.textAlign='center';
+          ctx.fillText('+'+(cv-pv),x,y-12);
+        }
+      });
+    }
+  }
+
+  function tick(){
+    drawFrame(frame);
+    if(frame<totalFrames){frame++;animId=requestAnimationFrame(tick);}
+    else drawFrame(totalFrames);
+  }
+
+  if(animId)cancelAnimationFrame(animId);
+  frame=0;tick();
+}
 async function saveOnlineHS(s){await upd({hsSaved:true});const ts=Date.now(),date=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const humans=s.playerOrder.filter(id=>!isBot(id));if(!humans.length)return;const sorted=[...humans].sort((a,b)=>(s.players[b]?.score||0)-(s.players[a]?.score||0));const saves=humans.map(id=>{const name=s.players[id]?.name||'?',score=s.players[id]?.score||0,place=sorted.indexOf(id)+1;return db.ref('highscores/'+name.toLowerCase().replace(/\s+/g,'_')+'_'+ts+'_'+id).set({name,score,place,won:place===1,numPlayers:humans.length,date,ts,source:'online',gameCode});});try{await Promise.all(saves);}catch(e){}}
 
 // ── GLOBAL ADMIN ──────────────────────────────────────────────────────────────
@@ -626,6 +976,138 @@ function renderHSRecent(entries){const games={};entries.forEach(e=>{const key=(e
 
 // ── ADMIN PANEL ───────────────────────────────────────────────────────────────
 function toggleAdminPanel(){G('adm-panel').classList.toggle('open');}
+
+// ── ADMIN PANEL DRAG / RESIZE / COLLAPSE ──────────────────────────────────────
+(function(){
+  const panel=()=>G('adm-panel');
+  let dragging=false,resizingH=false,resizingW=false;
+  let startX=0,startY=0,startLeft=0,startTop=0,startW=0,startH=0;
+  let collapsed=false;
+
+  // restore saved position/size
+  function loadState(){
+    const p=panel();if(!p)return;
+    try{
+      const s=JSON.parse(localStorage.getItem('adm_panel_state')||'{}');
+      if(s.left)p.style.left=s.left;
+      if(s.top)p.style.top=s.top;
+      if(s.width)p.style.width=s.width;
+      if(s.height)p.style.height=s.height;
+      if(s.right&&!s.left)p.style.right=s.right;
+      if(s.bottom&&!s.top)p.style.bottom=s.bottom;
+      if(s.collapsed){collapsed=true;const b=G('adm-body');if(b)b.classList.add('collapsed');const cb=G('adm-collapse-btn');if(cb)cb.textContent='+';}
+    }catch(e){}
+  }
+  function saveState(){
+    const p=panel();if(!p)return;
+    try{localStorage.setItem('adm_panel_state',JSON.stringify({left:p.style.left,top:p.style.top,right:p.style.right,bottom:p.style.bottom,width:p.style.width,height:p.style.height,collapsed}));}catch(e){}
+  }
+
+  // drag
+  document.addEventListener('mousedown',e=>{
+    const bar=G('adm-drag-bar');if(!bar||!bar.contains(e.target)||e.target.tagName==='BUTTON')return;
+    const p=panel();if(!p)return;
+    dragging=true;
+    const rect=p.getBoundingClientRect();
+    startX=e.clientX;startY=e.clientY;startLeft=rect.left;startTop=rect.top;
+    p.style.right='auto';p.style.bottom='auto';
+    p.style.left=startLeft+'px';p.style.top=startTop+'px';
+    e.preventDefault();
+  });
+  document.addEventListener('touchstart',e=>{
+    const bar=G('adm-drag-bar');if(!bar||!bar.contains(e.target)||e.target.tagName==='BUTTON')return;
+    const p=panel();if(!p)return;
+    dragging=true;
+    const t=e.touches[0];const rect=p.getBoundingClientRect();
+    startX=t.clientX;startY=t.clientY;startLeft=rect.left;startTop=rect.top;
+    p.style.right='auto';p.style.bottom='auto';
+    p.style.left=startLeft+'px';p.style.top=startTop+'px';
+  },{passive:true});
+
+  // resize bottom
+  document.addEventListener('mousedown',e=>{
+    const r=G('adm-resize');if(!r||e.target!==r)return;
+    const p=panel();if(!p)return;
+    resizingH=true;startY=e.clientY;startH=p.getBoundingClientRect().height;e.preventDefault();
+  });
+  document.addEventListener('touchstart',e=>{
+    const r=G('adm-resize');if(!r||e.target!==r)return;
+    const p=panel();if(!p)return;
+    resizingH=true;const t=e.touches[0];startY=t.clientY;startH=p.getBoundingClientRect().height;
+  },{passive:true});
+
+  // resize left side
+  document.addEventListener('mousedown',e=>{
+    const r=G('adm-resize-w');if(!r||e.target!==r)return;
+    const p=panel();if(!p)return;
+    resizingW=true;startX=e.clientX;const rect=p.getBoundingClientRect();startW=rect.width;startLeft=rect.left;e.preventDefault();
+  });
+  document.addEventListener('touchstart',e=>{
+    const r=G('adm-resize-w');if(!r||e.target!==r)return;
+    const p=panel();if(!p)return;
+    resizingW=true;const t=e.touches[0];startX=t.clientX;const rect=p.getBoundingClientRect();startW=rect.width;startLeft=rect.left;
+  },{passive:true});
+
+  function onMove(cx,cy){
+    const p=panel();if(!p)return;
+    if(dragging){
+      const nx=Math.max(0,Math.min(window.innerWidth-80,startLeft+(cx-startX)));
+      const ny=Math.max(0,Math.min(window.innerHeight-80,startTop+(cy-startY)));
+      p.style.left=nx+'px';p.style.top=ny+'px';
+    }
+    if(resizingH){
+      const nh=Math.max(120,Math.min(window.innerHeight-40,startH+(cy-startY)));
+      p.style.height=nh+'px';p.style.maxHeight='none';
+    }
+    if(resizingW){
+      const nw=Math.max(200,Math.min(window.innerWidth-20,startW-(cx-startX)));
+      const nl=Math.max(0,startLeft+(cx-startX));
+      p.style.width=nw+'px';p.style.left=nl+'px';p.style.right='auto';
+    }
+  }
+  function onUp(){if(dragging||resizingH||resizingW)saveState();dragging=false;resizingH=false;resizingW=false;}
+  document.addEventListener('mousemove',e=>{if(dragging||resizingH||resizingW)onMove(e.clientX,e.clientY);});
+  document.addEventListener('touchmove',e=>{if(dragging||resizingH||resizingW){const t=e.touches[0];onMove(t.clientX,t.clientY);}},{passive:true});
+  document.addEventListener('mouseup',onUp);
+  document.addEventListener('touchend',onUp);
+
+  // init on first open
+  const orig=window.toggleAdminPanel;
+  window.toggleAdminPanel=function(){
+    const p=G('adm-panel');if(!p)return;
+    const wasOpen=p.classList.contains('open');
+    p.classList.toggle('open');
+    if(!wasOpen)loadState();
+  };
+
+  window.admCollapse=function(){
+    collapsed=!collapsed;
+    const b=G('adm-body');const cb=G('adm-collapse-btn');
+    if(b)b.classList.toggle('collapsed',collapsed);
+    if(cb)cb.textContent=collapsed?'+':'−';
+    const p=panel();if(p&&collapsed)p.style.height='auto';
+    saveState();
+  };
+
+  window.admMinimize=function(){
+    const p=G('adm-panel');if(!p)return;
+    p.classList.remove('open');
+  };
+
+  window.admReset=function(){
+    const p=G('adm-panel');if(!p)return;
+    p.style.left='';p.style.top='';p.style.right='16px';p.style.bottom='72px';
+    p.style.width='340px';p.style.height='';p.style.maxHeight='82vh';
+    collapsed=false;
+    const b=G('adm-body');if(b)b.classList.remove('collapsed');
+    const cb=G('adm-collapse-btn');if(cb)cb.textContent='−';
+    try{localStorage.removeItem('adm_panel_state');}catch(e){}
+  };
+
+  // load saved state whenever panel becomes open
+  document.addEventListener('DOMContentLoaded',loadState);
+  setTimeout(loadState,100);
+})();
 function checkPopup(s){const p=s.adminPopup;if(!p||!p.text||p.id===lastPopupId)return;lastPopupId=p.id;const box=G('adm-pm');box.style.background=p.bg||'#0a1020e8';box.style.opacity=p.opacity||0.92;box.style.fontSize=(p.fontSize||22)+'px';box.style.color='#f0e6d3';G('adm-pm-text').textContent=p.text;G('adm-popup').classList.add('show');}
 function dismissPopup(){G('adm-popup').classList.remove('show');}
 async function sendPopup(){const text=G('adm-msg').value.trim();if(!text)return;await db.ref('games/'+gameCode+'/adminPopup').set({text,fontSize:parseInt(G('adm-fs').value)||22,opacity:(parseInt(G('adm-op').value)||92)/100,bg:G('adm-bg').value,id:Date.now().toString()});}
@@ -637,6 +1119,58 @@ async function cheatSkip(){if(!confirm('Skip round?'))return;const o=gs.playerOr
 async function cheatEnd(){if(!confirm('End the game?'))return;await upd({phase:'gameover'});}
 async function cheatForceWin(){const pid=G('adm-cp').value;if(!pid||!gs.trickCards||!Object.keys(gs.trickCards).length)return;const tw={...(gs.tricksWon||{})};gs.playerOrder.forEach(id=>{if(!tw[id])tw[id]=0;});tw[pid]=(tw[pid]||0)+1;await upd({trickWinner:pid,trickComplete:true,tricksWon:tw,tricksDone:(gs.tricksDone||0)+1,lastTrickCards:{...(gs.trickCards||{})}});}
 async function cheatNuke(){if(!confirm('Reset all bids?'))return;const bids={};(gs.playerOrder||[]).forEach(id=>bids[id]=-1);await upd({bids,bidStep:0,phase:'bidding'});}
+
+async function cheatUndoTrick(){
+  const log=gs.trickLog||[];
+  if(!log.length){alert('No trick history to undo — tricks are saved once all players have played.');return;}
+  if(!confirm('Undo the last completed trick? Cards will be returned to players\' hands.'))return;
+  const snap=log[log.length-1];
+  const newLog=log.slice(0,-1);
+  // Restore hands, trick counts, and trick state from snapshot
+  const ch={
+    hands:snap.hands,
+    tricksWon:snap.tricksWon,
+    tricksDone:snap.tricksDone,
+    trickLeader:snap.trickLeader,
+    trickTurn:snap.trickTurn,
+    trickCards:null,
+    trickLeadSuit:null,
+    trickComplete:null,
+    trickWinner:null,
+    lastTrickCards:null,
+    trickLog:newLog,
+    phase:'playing'
+  };
+  // Flatten hands into the update format Firebase expects
+  const update={...ch};
+  delete update.hands;
+  Object.entries(snap.hands||{}).forEach(([id,h])=>{update[`hands/${id}`]=h;});
+  delete update.tricksWon;
+  Object.entries(snap.tricksWon||{}).forEach(([id,v])=>{update[`tricksWon/${id}`]=v;});
+  await upd(update);
+}
+
+async function rematch(){
+  if(!amHost()){alert('Only the host can start a rematch.');return;}
+  // Keep same players (humans only) and same game code, reset everything else
+  const humans=gs.playerOrder.filter(id=>!isBot(id));
+  const players={};
+  humans.forEach(id=>{players[id]={name:gs.players[id].name,score:0};});
+  const bids={};humans.forEach(id=>{bids[id]=-1;});
+  const now=Date.now();
+  await db.ref('games/'+gameCode).set({
+    hostId:myId,
+    phase:'lobby',
+    playerOrder:humans,
+    roundIdx:0,dealerIdx:0,
+    players,bids,bidStep:0,
+    bots:{},
+    scoreHistory:[],
+    createdAt:now,lastActive:now,
+    rematch:true
+  });
+  // No need to re-subscribe — existing listener picks up the reset
+}
 
 // ── CARD PICKER ───────────────────────────────────────────────────────────────
 let cpSelected=[], cpMode='current'; // mode: 'current' or 'preset'
@@ -656,16 +1190,20 @@ function openCardPicker(mode){
 function closeCardPicker(){G('cp-overlay').classList.remove('show');}
 
 function buildCardPickerGrid(){
-  // build set of all cards already in any hand (excluding selected player if replacing)
-  const pid=G('adm-give-player').value;
+  const isPreset=cpMode==='preset';
+  const pid=isPreset?G('adm-preset-player').value:G('adm-give-player').value;
+
+  // For current-hand mode: track cards in other players' hands
+  // For preset mode: all 52 are freely available — no greying
   const takenBy={};
-  if(gs.hands&&gs.playerOrder){
+  if(!isPreset&&gs.hands&&gs.playerOrder){
     gs.playerOrder.forEach(id=>{
       ph(gs.hands[id]).forEach(c=>{
         if(id!==pid) takenBy[c]=pname(gs,id);
       });
     });
   }
+
   const grid=G('cp-grid');grid.innerHTML='';
   SUITS.forEach(suit=>{
     const col=SC[suit],sym=SYM[suit];
@@ -677,13 +1215,20 @@ function buildCardPickerGrid(){
       const card=val+suit;
       const isSel=cpSelected.includes(card);
       const takenName=takenBy[card];
-      const isTaken=!!takenName&&!isSel;
+      // Only grey out in current-hand mode, never in preset mode
+      const isTaken=!isPreset&&!!takenName&&!isSel;
       const btn=document.createElement('div');
       btn.className='cp-c'+(isSel?' sel':'')+(isTaken?' taken':'');
       btn.style.color=col;
-      btn.title=isTaken?'In '+takenName+"'s hand":card;
+      // tooltip: in preset mode show which player currently holds it (info only)
+      if(isPreset&&gs.hands&&gs.playerOrder){
+        const holder=gs.playerOrder.find(id=>ph(gs.hands[id]).includes(card));
+        btn.title=holder?`Currently held by ${pname(gs,holder)} — will be overridden`:card;
+      } else {
+        btn.title=isTaken?'In '+takenName+"'s hand — tap to confirm take":card;
+      }
       btn.innerHTML=`<div class="cv" style="position:absolute;top:2px;left:3px;font-size:10px;font-weight:800">${cd(val)}</div><div class="cs">${sym}</div>`;
-      if(!isTaken||isSel) btn.onclick=()=>toggleCpCard(card);
+      if(!isTaken) btn.onclick=()=>toggleCpCard(card);
       else btn.onclick=()=>{if(confirm('This card is in '+takenName+"'s hand. Take it anyway?")){toggleCpCard(card);}};
       row.appendChild(btn);
     });
@@ -795,13 +1340,48 @@ function updateAdminPanel(s){
   const fh=G('adm-hands');
   if(fh){
     if(s.hands&&s.playerOrder){
+      // build allHands map for full-info analysis
+      const allHandsMap={};
+      s.playerOrder.forEach(id=>{allHandsMap[id]=ph(s.hands[id]);});
+
       let html='';
       s.playerOrder.forEach(id=>{
         const p=s.players[id];if(!p)return;
         const hand=ph(s.hands[id]),sorted=sortH(hand,s.trumpSuit);
-        const rec=optimalBid(hand,s.trumpSuit,cc,s.playerOrder.length);
         const bot=isBot(id)?`<span class="bot-badge">${(s.bots||{})[id]||'bot'}</span>`:'';
-        html+=`<div class="hand-row"><div class="hn">${p.name}${bot} <span style="color:#5a9acc;font-size:10px">· suggest: <strong style="color:#7ec8a0">${rec}</strong></span></div><div class="mini-hand">${sorted.map(c=>mkMini(c)).join('')}</div></div>`;
+
+        // full-info bid suggestion
+        const rec=optimalBid(hand,s.trumpSuit,cc,s.playerOrder.length,allHandsMap);
+
+        // play suggestion during tricks
+        let playTip='';
+        if(s.phase==='playing'&&hand.length>0&&!s.trickComplete){
+          const result=bestCardToPlay(
+            hand,s.trickLeadSuit,s.trumpSuit,
+            s.trickCards||{},s.playerOrder,
+            s.bids||{},s.tricksWon||{},s.tricksDone||0,cc,allHandsMap
+          );
+          if(result){
+            const winPct=Math.round(result.winProb*100);
+            const strategy=((s.bids||{})[id]||0)<=(s.tricksWon||{})[id]?'lose this':'win this';
+            playTip=`<div style="font-size:10px;color:#8060c0;margin-top:3px">
+              🎯 Play: <strong style="color:#d4af37">${mkMini(result.card)}</strong>
+              <span style="color:#5a9acc">${cd(cv(result.card))}${SYM[cs(result.card)]}</span>
+              <span style="color:#5a6a7a">(${winPct}% win · goal: ${strategy})</span>
+            </div>`;
+          }
+        }
+
+        html+=`<div class="hand-row">
+          <div class="hn" style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+            <span>${p.name}${bot}</span>
+            ${s.phase==='bidding'?`<span style="color:#5a9acc;font-size:10px">suggest bid: <strong style="color:#7ec8a0">${rec}</strong></span>`:''}
+            ${(s.bids||{})[id]>=0?`<span style="font-size:10px;color:#7a6a3a">bid: <strong style="color:#d4af37">${(s.bids||{})[id]}</strong></span>`:''}
+            ${(s.tricksWon||{})[id]!==undefined?`<span style="font-size:10px;color:#5a7a5a">won: <strong style="color:#7ec8a0">${(s.tricksWon||{})[id]||0}</strong></span>`:''}
+          </div>
+          ${playTip}
+          <div class="mini-hand">${sorted.map(c=>mkMini(c)).join('')}</div>
+        </div>`;
       });
       fh.innerHTML=html||'<div style="color:#6a4a7a;font-size:12px">No hands</div>';
     } else fh.innerHTML='<div style="color:#6a4a7a;font-size:12px;text-align:center">Cards not dealt yet</div>';
@@ -826,10 +1406,11 @@ function secretTap(){_taps++;clearTimeout(_tapTimer);_tapTimer=setTimeout(()=>_t
 let irlCount=4,irlPlayers=[],irlScores=[],irlRoundIdx=0,irlDealerIdx=0;
 let irlBids=[],irlBidStep=0,irlBidOrder=[],irlWon=[],irlLastBids=[],irlLastWon=[],irlLastScores=[];
 let irlContCount=4,irlContRound=0,irlContDealer=0;
+let irlScoreHistory=[];
 function irlCalcScore(b,w){if(w===b)return 10+2*b;if(w>b)return w;return 0;}
 function initIRLSetup(){irlCount=4;buildDealerBtns('irl-pc-btns',()=>irlCount,(n)=>{irlCount=n;initIRLSetup();});const ni=G('irl-name-inputs');const old=Array.from(ni.querySelectorAll('input')).map(i=>i.value);ni.innerHTML='';for(let i=0;i<irlCount;i++){const inp=document.createElement('input');inp.type='text';inp.placeholder='Player '+(i+1);inp.value=old[i]||'';ni.appendChild(inp);}}
 function buildDealerBtns(elId,getCur,setCur){const el=G(elId);el.innerHTML='';[2,3,4,5,6,7,8].forEach(n=>{const b=document.createElement('button');b.className='dealer-btn'+(n===getCur()?' sel':'');b.textContent=n;b.onclick=()=>{setCur(n);};el.appendChild(b);});}
-function irlStartGame(){const inputs=G('irl-name-inputs').querySelectorAll('input');irlPlayers=Array.from(inputs).map((inp,i)=>inp.value.trim()||'Player '+(i+1));irlScores=Array(irlCount).fill(0);irlRoundIdx=0;irlDealerIdx=0;irlShowRI();}
+function irlStartGame(){const inputs=G('irl-name-inputs').querySelectorAll('input');irlPlayers=Array.from(inputs).map((inp,i)=>inp.value.trim()||'Player '+(i+1));irlScores=Array(irlCount).fill(0);irlRoundIdx=0;irlDealerIdx=0;irlScoreHistory=[];irlShowRI();}
 function irlShowContinue(){irlContCount=4;irlContRound=0;irlContDealer=0;buildIRLContScreen();show('s-irl-continue');}
 function buildIRLContScreen(){buildDealerBtns('irl-cont-pc',()=>irlContCount,(n)=>{irlContCount=n;if(irlContDealer>=irlContCount)irlContDealer=0;buildIRLContScreen();});const ni=G('irl-cont-names');const oldN=Array.from(ni.querySelectorAll('input')).map(i=>i.value);ni.innerHTML='';for(let i=0;i<irlContCount;i++){const inp=document.createElement('input');inp.type='text';inp.placeholder='Player '+(i+1);inp.value=oldN[i]||'';inp.oninput=()=>{irlContRefreshLabels();buildIRLContDealerBtns();};ni.appendChild(inp);}const si=G('irl-cont-scores');const oldS=Array.from(si.querySelectorAll('input')).map(i=>i.value);si.innerHTML='';const names=irlContGetNames();for(let i=0;i<irlContCount;i++){const row=document.createElement('div');row.className='score-entry-row';const lbl=document.createElement('span');lbl.className='sname';lbl.id='irl-slbl-'+i;lbl.textContent=names[i];const inp=document.createElement('input');inp.type='number';inp.placeholder='0';inp.value=oldS[i]||'';row.appendChild(lbl);row.appendChild(inp);si.appendChild(row);}const rs=G('irl-cont-rounds');rs.innerHTML='';ROUNDS.forEach((cards,i)=>{const b=document.createElement('button');b.className='round-btn'+(i===irlContRound?' sel':'');b.innerHTML='<div style="font-size:13px;font-weight:bold">'+(i+1)+'</div><div style="font-size:9px;color:'+(i===irlContRound?'#d4af37':'#5a8a6a')+'">'+cards+'cd</div>';b.onclick=()=>{irlContRound=i;buildIRLContScreen();};rs.appendChild(b);});buildIRLContDealerBtns();}
 function irlContGetNames(){return Array.from(G('irl-cont-names').querySelectorAll('input')).map((inp,i)=>inp.value.trim()||'Player '+(i+1));}
@@ -842,10 +1423,35 @@ function irlRenderBidStep(){const cc=ROUNDS[irlRoundIdx],n=irlCount,pidx=irlBidO
 function irlPlaceBid(val){const pidx=irlBidOrder[irlBidStep];irlBids[pidx]=val;if(irlBidStep===irlCount-1){irlWon=Array(irlCount).fill(0);irlRenderTricks();show('s-irl-tricks');}else{irlBidStep++;irlRenderBidStep();}}
 function irlRenderTricks(){const cc=ROUNDS[irlRoundIdx],total=irlWon.reduce((a,b)=>a+b,0),rem=cc-total;const badge=G('irl-tricks-badge');badge.textContent=rem>0?rem+' trick'+(rem!==1?'s':'')+' left to assign':'✓ All tricks assigned';badge.className='badge'+(rem===0?' done':'');const rows=G('irl-tricks-rows');rows.innerHTML='';irlPlayers.forEach((p,i)=>{const row=document.createElement('div');row.className='cnt-row';const exact=irlWon[i]===irlBids[i];row.innerHTML='<div><div style="font-size:16px;font-weight:bold">'+p+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">bid: '+irlBids[i]+'</div></div><div style="display:flex;align-items:center;gap:12px"><button class="cnt-btn'+(irlWon[i]<=0?' off':'')+'" onclick="irlChangeWon('+i+',-1)">−</button><span class="cnt-val" style="color:'+(exact?'#d4af37':'var(--txt)')+'">'+irlWon[i]+'</span><button class="cnt-btn'+(total>=cc?' off':'')+'" onclick="irlChangeWon('+i+',1)">+</button></div>';rows.appendChild(row);});const sub=G('irl-tricks-submit');if(rem===0){sub.className='btn';sub.disabled=false;sub.textContent='Calculate Scores →';}else{sub.className='btn';sub.disabled=true;sub.style.background='#1a3a2a';sub.style.color='#2a5a35';sub.textContent='Need '+rem+' more';}}
 function irlChangeWon(i,d){const cc=ROUNDS[irlRoundIdx],total=irlWon.reduce((a,b)=>a+b,0);if(d>0&&total>=cc)return;if(d<0&&irlWon[i]<=0)return;irlWon[i]+=d;irlRenderTricks();}
-function irlFinishRound(){const rs=irlPlayers.map((_,i)=>irlCalcScore(irlBids[i],irlWon[i]));irlLastScores=[...rs];irlLastBids=[...irlBids];irlLastWon=[...irlWon];irlScores=irlScores.map((s,i)=>s+rs[i]);irlRenderSum();show('s-irl-sum');}
+function irlFinishRound(){
+  const rs=irlPlayers.map((_,i)=>irlCalcScore(irlBids[i],irlWon[i]));
+  irlLastScores=[...rs];irlLastBids=[...irlBids];irlLastWon=[...irlWon];
+  irlScores=irlScores.map((s,i)=>s+rs[i]);
+  // record cumulative scores for chart
+  const snap={};irlPlayers.forEach((_,i)=>snap[String(i)]=irlScores[i]);
+  irlScoreHistory.push(snap);
+  irlRenderSum();show('s-irl-sum');
+}
 function irlRenderSum(){G('irl-sum-title').textContent='Round '+(irlRoundIdx+1)+' Results';G('irl-sum-sub').textContent=irlRoundIdx<14?(14-irlRoundIdx)+' rounds remaining':'Final round!';const rows=G('irl-sum-rows');rows.innerHTML='';irlPlayers.forEach((p,i)=>{const hit=irlLastWon[i]===irlLastBids[i],over=irlLastWon[i]>irlLastBids[i],g=irlLastScores[i];const row=document.createElement('div');row.className='row';row.style.padding='11px 0';row.innerHTML='<div style="flex:1"><div style="font-weight:bold;font-size:15px">'+p+'</div><div style="font-size:12px;color:var(--mut);margin-top:2px">bid <strong style="color:var(--txt)">'+irlLastBids[i]+'</strong> · won <strong style="color:var(--txt)">'+irlLastWon[i]+'</strong> · <span style="color:'+(hit?'#7ec8a0':over?'#d4a045':'#c44444')+'">'+(hit?'✓ Exact!':over?'▲ Over':'✗ Under')+'</span></div></div><div style="text-align:right;margin-left:10px"><div style="font-size:20px;font-weight:bold;color:'+(g>0?'#d4af37':'#5a4a4a')+'">+'+g+'</div><div style="font-size:11px;color:var(--mut)">'+irlScores[i]+' total</div></div>';rows.appendChild(row);});const sorted=[...irlPlayers.map((p,i)=>({p,s:irlScores[i]}))].sort((a,b)=>b.s-a.s);const board=G('irl-sum-board');board.innerHTML='';sorted.forEach(({p,s},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="color:'+(r===0?'#d4af37':'#b0c8c0')+';font-size:14px">'+MEDALS[r]+' '+p+'</span><span style="font-weight:bold;color:'+(r===0?'#d4af37':'var(--txt)')+'">'+s+'</span>';board.appendChild(row);});G('irl-sum-next').textContent=irlRoundIdx===14?'Final Results 🏆':'Next Round →';}
 function irlNextRound(){if(irlRoundIdx===14){irlGameOver();return;}irlRoundIdx++;irlDealerIdx=(irlDealerIdx+1)%irlCount;irlShowRI();}
-function irlGameOver(){const sorted=[...irlPlayers.map((p,i)=>({p,s:irlScores[i]}))].sort((a,b)=>b.s-a.s);G('irl-go-win').textContent=sorted[0].p;G('irl-go-pts').textContent=sorted[0].s+' points';const board=G('irl-go-board');board.innerHTML='';sorted.slice(1).forEach(({p,s},r)=>{const row=document.createElement('div');row.className='row';row.innerHTML='<span style="font-size:14px">'+MEDALS[r+1]+' '+p+'</span><span style="font-weight:bold;color:#d4af37">'+s+' pts</span>';board.appendChild(row);});show('s-irl-go');saveIRLHS();}
+function irlGameOver(){
+  const sorted=[...irlPlayers.map((p,i)=>({p,s:irlScores[i]}))].sort((a,b)=>b.s-a.s);
+  G('irl-go-win').textContent=sorted[0].p;
+  G('irl-go-pts').textContent=sorted[0].s+' points';
+  const board=G('irl-go-board');board.innerHTML='';
+  sorted.slice(1).forEach(({p,s},r)=>{
+    const row=document.createElement('div');row.className='row';
+    row.innerHTML='<span style="font-size:14px">'+MEDALS[r+1]+' '+p+'</span><span style="font-weight:bold;color:#d4af37">'+s+' pts</span>';
+    board.appendChild(row);
+  });
+  show('s-irl-go');
+  saveIRLHS();
+  // build score history from accumulated round data
+  const ids=irlPlayers.map((_,i)=>String(i));
+  const names={};irlPlayers.forEach((p,i)=>names[String(i)]=p);
+  const hist=irlScoreHistory||[];
+  setTimeout(()=>drawScoreChart('irl-go-chart',ids,names,hist),200);
+}
 async function saveIRLHS(){const ts=Date.now(),date=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const sorted=[...irlPlayers.map((p,i)=>({p,s:irlScores[i]}))].sort((a,b)=>b.s-a.s);const saves=irlPlayers.map((name,i)=>{const score=irlScores[i],place=sorted.findIndex(x=>x.p===name)+1;return db.ref('highscores/'+name.toLowerCase().replace(/\s+/g,'_')+'_'+ts+'_irl_'+i).set({name,score,place,won:place===1,numPlayers:irlCount,date,ts,source:'irl'});});try{await Promise.all(saves);}catch(e){}}
 function confirmIRLLeave(){if(confirm('Leave this game?'))show('s-home');}
 
