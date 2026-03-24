@@ -147,7 +147,7 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
   <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
     <span style="font-size:14px;font-weight:bold;color:#c060c0">👁 Admin Panel</span>
     <div style="display:flex;gap:6px">
-      <button class="btn-bsm" onclick="show('s-global-admin');loadGlobalAdmin()" style="padding:5px 9px;font-size:11px">All Games</button>
+      <button class="btn-bsm" onclick="showGlobalAdmin()" style="padding:5px 9px;font-size:11px">All Games</button>
       <button onclick="toggleAdminPanel()" style="background:none;border:none;color:#6a3a7a;font-size:12px;cursor:pointer;text-decoration:underline">Hide</button>
     </div>
   </div>
@@ -211,6 +211,16 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
       <button class="btn-rsm" onclick="cheatNuke()">💣 Reset Bids</button>
     </div>
   </div>
+
+  <div class="ab">
+    <div class="ah">⏳ Fake Loading Screen</div>
+    <div style="font-size:11px;color:#8060a0;margin-bottom:8px">Show players a "Loading..." screen while you secretly set up hands. They're frozen — you're not.</div>
+    <div style="display:flex;gap:6px;flex-wrap:wrap">
+      <button class="btn-bsm" onclick="startFakeLoading()" id="adm-fake-start" style="flex:1">🔒 Lock & Load</button>
+      <button class="btn-rsm" onclick="endFakeLoading()" id="adm-fake-end" style="flex:1;display:none">▶️ Deal & Unlock</button>
+    </div>
+    <div id="adm-fake-status" style="font-size:11px;color:#6a3a7a;margin-top:6px;text-align:center"></div>
+  </div>
 </div>
 
 <!-- CARD PICKER OVERLAY -->
@@ -265,7 +275,35 @@ select{width:100%;padding:8px 10px;font-size:14px;border:1px solid var(--g3);bor
 <div id="s-hs" class="scr"><div class="box" style="margin-top:14px"><div style="font-size:34px;text-align:center;margin-bottom:4px">🏆</div><div class="title">High Scores</div><div class="sub">all-time hall of fame</div><div style="display:flex;border:1px solid var(--g3);border-radius:10px;overflow:hidden;margin-bottom:14px"><button id="hs-tab-top" class="hs-tab active" onclick="hsTab('top')">Top Scores</button><button id="hs-tab-wins" class="hs-tab" onclick="hsTab('wins')">Most Wins</button><button id="hs-tab-recent" class="hs-tab" onclick="hsTab('recent')">Recent</button></div><div id="hs-content"><div style="text-align:center;color:var(--mut);padding:20px">Loading...</div></div><button class="btn-ghost" onclick="show('s-home')" style="margin-top:10px">← Back</button></div></div>
 
 <!-- GLOBAL ADMIN -->
-<div id="s-global-admin" class="scr"><div class="box" style="margin-top:14px;border-color:#9a30a0;max-width:620px"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px"><div class="title" style="color:#c060c0;margin-bottom:0">👁 All Active Games</div><button class="btn-bsm" onclick="loadGlobalAdmin()">Refresh</button></div><div id="global-admin-list"><div class="wait">Loading...</div></div><button class="btn-ghost" onclick="show('s-home')" style="margin-top:10px">← Back</button></div></div>
+<div id="s-global-admin" class="scr">
+  <div class="box" style="margin-top:14px;border-color:#9a30a0;max-width:640px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <div class="title" style="color:#c060c0;margin-bottom:0">👁 All Active Games</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span id="ga-live-dot" style="width:8px;height:8px;border-radius:50%;background:#2d6a4f;display:inline-block"></span>
+        <span style="font-size:11px;color:var(--mut)">Live</span>
+      </div>
+    </div>
+    <div style="font-size:11px;color:#6a3a7a;margin-bottom:10px">Tap any game to watch it. Your admin panel will switch to that game.</div>
+    <div id="global-admin-list"><div class="wait">Loading...</div></div>
+    <button class="btn-ghost" onclick="leaveGlobalAdmin()" style="margin-top:10px">← Back</button>
+  </div>
+</div>
+
+<!-- FAKE LOADING OVERLAY — shown to players when admin locks -->
+<div id="fake-loading-overlay" style="display:none;position:fixed;inset:0;z-index:7777;background:rgba(6,15,10,0.97);flex-direction:column;align-items:center;justify-content:center;gap:20px">
+  <div style="font-size:48px">🃏</div>
+  <div style="font-size:22px;font-weight:700;color:var(--gold)" id="fake-loading-msg">Getting ready...</div>
+  <div style="display:flex;gap:8px;margin-top:4px" id="fake-loading-dots">
+    <div style="width:10px;height:10px;border-radius:50%;background:var(--gold);animation:fld .9s infinite 0s"></div>
+    <div style="width:10px;height:10px;border-radius:50%;background:var(--gold);animation:fld .9s infinite .3s"></div>
+    <div style="width:10px;height:10px;border-radius:50%;background:var(--gold);animation:fld .9s infinite .6s"></div>
+  </div>
+  <div style="font-size:13px;color:var(--mut);margin-top:6px" id="fake-loading-sub">Shuffling the deck...</div>
+</div>
+<style>
+@keyframes fld{0%,100%{opacity:.2;transform:scale(.8)}50%{opacity:1;transform:scale(1.2)}}
+</style>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
@@ -338,9 +376,7 @@ function setErr(m){const e=G('err');if(!e)return;e.textContent=m;setTimeout(()=>
 function amHost(){return gs&&gs.hostId===myId;}
 function pname(s,id){return s.players?.[id]?.name||'?';}
 function you(id){return id===myId?'<span class="ytag">(you)</span>':'';}
-function upd(o){return db.ref('games/'+gameCode).update(o);}
 function genCode(){const C='ABCDEFGHJKLMNPQRSTUVWXYZ';return[0,0,0,0].map(()=>C[0|Math.random()*C.length]).join('');}
-
 function subscribe(){
   if(gameRef)gameRef.off();
   gameRef=db.ref('games/'+gameCode);
@@ -379,8 +415,9 @@ function runBots(s){
 }
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
-async function createGame(){myName=G('my-name').value.trim();if(!myName){setErr('Enter your name');return;}let code=genCode(),snap=await db.ref('games/'+code).once('value');while(snap.exists()){code=genCode();snap=await db.ref('games/'+code).once('value');}gameCode=code;sessionStorage.setItem('udtr_code',code);sessionStorage.setItem('udtr_name',myName);await db.ref('games/'+code).set({hostId:myId,phase:'lobby',playerOrder:[myId],roundIdx:0,dealerIdx:0,players:{[myId]:{name:myName,score:0}},bids:{[myId]:-1},bidStep:0,bots:{}});subscribe();}
-async function joinGame(){const rawCode=G('join-code').value.trim().toUpperCase();if(rawCode==='HENRY'){myName=G('my-name').value.trim()||'Admin';const code=prompt('Game code to watch (blank for all games):');if(!code){show('s-global-admin');loadGlobalAdmin();return;}await enterAdmin(code.toUpperCase());return;}myName=G('my-name').value.trim();if(!myName){setErr('Enter your name');return;}if(rawCode.length!==4){setErr('Enter 4-letter code');return;}const snap=await db.ref('games/'+rawCode).once('value');if(!snap.exists()){setErr('Game not found');return;}const gd=snap.val();if(gd.phase!=='lobby'){setErr('Game already started');return;}if((gd.playerOrder||[]).filter(id=>!isBot(id)).length>=8){setErr('Game is full');return;}gameCode=rawCode;sessionStorage.setItem('udtr_code',rawCode);sessionStorage.setItem('udtr_name',myName);await db.ref('games/'+rawCode).update({playerOrder:[...(gd.playerOrder||[]),myId],[`players/${myId}`]:{name:myName,score:0},[`bids/${myId}`]:-1});subscribe();}
+async function createGame(){myName=G('my-name').value.trim();if(!myName){setErr('Enter your name');return;}let code=genCode(),snap=await db.ref('games/'+code).once('value');while(snap.exists()){code=genCode();snap=await db.ref('games/'+code).once('value');}gameCode=code;sessionStorage.setItem('udtr_code',code);sessionStorage.setItem('udtr_name',myName);const now=Date.now();await db.ref('games/'+code).set({hostId:myId,phase:'lobby',playerOrder:[myId],roundIdx:0,dealerIdx:0,players:{[myId]:{name:myName,score:0}},bids:{[myId]:-1},bidStep:0,bots:{},createdAt:now,lastActive:now});subscribe();}
+function upd(o){return db.ref('games/'+gameCode).update({...o,lastActive:Date.now()});}
+async function joinGame(){const rawCode=G('join-code').value.trim().toUpperCase();if(rawCode==='HENRY'){myName=G('my-name').value.trim()||'Admin';const code=prompt('Game code to watch (blank for all games):');if(!code){showGlobalAdmin();return;}await enterAdmin(code.toUpperCase());return;}myName=G('my-name').value.trim();if(!myName){setErr('Enter your name');return;}if(rawCode.length!==4){setErr('Enter 4-letter code');return;}const snap=await db.ref('games/'+rawCode).once('value');if(!snap.exists()){setErr('Game not found');return;}const gd=snap.val();if(gd.phase!=='lobby'){setErr('Game already started');return;}if((gd.playerOrder||[]).filter(id=>!isBot(id)).length>=8){setErr('Game is full');return;}gameCode=rawCode;sessionStorage.setItem('udtr_code',rawCode);sessionStorage.setItem('udtr_name',myName);await db.ref('games/'+rawCode).update({playerOrder:[...(gd.playerOrder||[]),myId],[`players/${myId}`]:{name:myName,score:0},[`bids/${myId}`]:-1});subscribe();}
 async function enterAdmin(code){const snap=await db.ref('games/'+code).once('value');if(!snap.exists()){alert('Game not found');return;}gameCode=code;isAdmin=true;G('adm-hide').classList.add('show');G('adm-panel').classList.add('open');subscribe();}
 async function startGame(){const o=gs.playerOrder,n=o.length,need=Math.max(0,4-n),updates={phase:'roundIntro'};if(need>0){const newOrder=[...o];const bots={...(gs.bots||{})};const players={...(gs.players||{})};const diffSels=document.querySelectorAll('.bot-diff-sel');for(let i=0;i<need;i++){const diff=diffSels[i]?.value||'medium';const botId=newBotId();newOrder.push(botId);bots[botId]=diff;players[botId]={name:BOT_NAMES[diff][i%3],score:0};}updates.playerOrder=newOrder;updates.bots=bots;updates.players=players;newOrder.forEach(id=>{updates[`bids/${id}`]=-1;});}await upd(updates);}
 async function dealAndBid(){
@@ -402,7 +439,7 @@ function leaveGame(){if(gameRef)gameRef.off();sessionStorage.removeItem('udtr_co
 function confirmLeave(){if(confirm('Leave this game?'))leaveGame();}
 
 // ── RENDER ────────────────────────────────────────────────────────────────────
-function render(s){const map={lobby:'s-lobby',roundIntro:'s-ri',bidding:'s-bid',playing:'s-play',summary:'s-sum',gameover:'s-go'};const id=map[s.phase];if(id)show(id);if(s.phase==='lobby')rLobby(s);else if(s.phase==='roundIntro')rRI(s);else if(s.phase==='bidding')rBid(s);else if(s.phase==='playing')rPlay(s);else if(s.phase==='summary')rSum(s);else if(s.phase==='gameover')rGO(s);}
+function render(s){const map={lobby:'s-lobby',roundIntro:'s-ri',bidding:'s-bid',playing:'s-play',summary:'s-sum',gameover:'s-go'};const id=map[s.phase];if(id)show(id);if(s.phase==='lobby')rLobby(s);else if(s.phase==='roundIntro')rRI(s);else if(s.phase==='bidding')rBid(s);else if(s.phase==='playing')rPlay(s);else if(s.phase==='summary')rSum(s);else if(s.phase==='gameover')rGO(s);checkFakeLoading(s);}
 function rLobby(s){const el=G('lob-code');el.textContent=gameCode;el.onclick=()=>{navigator.clipboard.writeText(gameCode).catch(()=>{});el.textContent='Copied!';setTimeout(()=>el.textContent=gameCode,1500);};const pl=G('lob-players');pl.innerHTML='';(s.playerOrder||[]).filter(id=>!isBot(id)).forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+you(id)+'</span>'+(id===s.hostId?'<span style="color:#d4af37;font-size:12px">HOST</span>':'');pl.appendChild(r);});const botIds=(s.playerOrder||[]).filter(isBot),bots=s.bots||{};const bl=G('lob-bots');bl.innerHTML='';if(botIds.length){bl.innerHTML='<div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin:8px 0 4px;text-transform:uppercase">AI Bots</div>';botIds.forEach(id=>{const r=document.createElement('div');r.className='row';r.innerHTML='<span>'+pname(s,id)+'<span class="bot-badge">'+(bots[id]||'?')+'</span></span>';bl.appendChild(r);});}const humanCount=(s.playerOrder||[]).filter(id=>!isBot(id)).length,act=G('lob-act');act.innerHTML='';if(amHost()){const need=Math.max(0,4-humanCount);let html='';if(need>0)html+='<div class="ni" style="margin-bottom:10px">'+need+' AI bot'+(need!==1?'s':'')+' will fill empty spots</div>';if(humanCount>=2||need>0){if(need>0){html+='<div class="lbl">Bot difficulties</div>';for(let i=0;i<need;i++){html+=`<div class="arow" style="margin-bottom:6px"><span style="color:var(--mut);font-size:13px">Bot ${i+1}</span><select class="bot-diff-sel" style="padding:5px 8px;font-size:12px;border:1px solid var(--g3);border-radius:7px;background:var(--g1);color:var(--txt);width:auto"><option value="easy">Easy</option><option value="medium" selected>Medium</option><option value="hard">Hard</option></select></div>`;}}html+='<button class="btn" onclick="startGame()">Start Game →</button>';}else html='<div class="wait">Need 2+ players...</div>';act.innerHTML=html;}else act.innerHTML='<div class="wait">Waiting for host...</div>';}
 function rRI(s){const cc=ROUNDS[s.roundIdx],o=s.playerOrder;G('ri-title').textContent='Round '+(s.roundIdx+1);makePips(s.roundIdx,'ri-pips');G('ri-cards').textContent=cc;const sc=G('ri-scores');sc.innerHTML='';o.forEach(id=>{const r=document.createElement('div');r.className='row';const bot=isBot(id)?`<span class="bot-badge">${(s.bots||{})[id]||'bot'}</span>`:'';r.innerHTML='<span>'+pname(s,id)+you(id)+bot+'</span><span style="color:#d4af37;font-weight:bold">'+(s.players[id].score||0)+' pts</span>';sc.appendChild(r);});const dealer=o[s.dealerIdx],first=o[(s.dealerIdx+1)%o.length];const act=G('ri-act');act.innerHTML='<div class="ib" style="margin-top:10px"><div class="row"><span style="color:var(--mut)">Dealer</span><span style="color:#d4af37;font-weight:bold">'+pname(s,dealer)+(isBot(dealer)?'<span class="bot-badge">bot</span>':'')+'</span></div><div class="row" style="border:none;padding-bottom:0"><span style="color:var(--mut)">Bids first</span><span style="font-weight:bold">'+pname(s,first)+(isBot(first)?'<span class="bot-badge">bot</span>':'')+'</span></div></div>';if(amHost())act.innerHTML+='<button class="btn" onclick="dealAndBid()" style="margin-top:6px">Deal Cards →</button>';else act.innerHTML+='<div class="wait" style="margin-top:10px">Waiting for host to deal...</div>';}
 function rBid(s){const cc=ROUNDS[s.roundIdx],o=s.playerOrder,n=o.length,bo=tOrd(o,o[(s.dealerIdx+1)%n]);const curr=bo[s.bidStep],isMe=curr===myId,isDealer=s.bidStep===n-1;const tot=o.reduce((sum,id)=>{const b=(s.bids||{})[id];return sum+(b>=0?b:0);},0);const isEx=cc<=3,restr=(()=>{if(isEx||!isDealer)return null;const r=cc-tot;return(r>=0&&r<=cc)?r:null;})();G('bid-rl').onclick=secretTap;G('bid-rl').textContent='Round '+(s.roundIdx+1)+' — Bidding';G('bid-sub').textContent=cc+' cards · '+(s.bidStep+1)+' of '+n;G('bid-trump').innerHTML=mkTH(s.trumpSuit,s.trumpCard);const notice=G('bid-notice');notice.innerHTML='';if(isMe&&restr!==null)notice.innerHTML='<div class="nw">⚠️ Cannot bid <strong>'+restr+'</strong> — dealer restriction</div>';const main=G('bid-main');main.innerHTML='';if(isMe){const myHand=ph(s.hands?.[myId]),recBid=optimalBid(myHand,s.trumpSuit,cc,n);let h='<div style="text-align:center;margin:4px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:4px">'+(isDealer?'YOUR BID (DEALER)':'YOUR BID')+'</div><div style="font-size:22px;font-weight:bold;color:#d4af37">'+pname(s,myId)+'</div><div style="color:var(--mut);font-size:12px;margin-top:2px">How many tricks will you win?</div><div style="font-size:11px;color:#5a9acc;margin-top:4px">💡 Suggested: <strong style="color:#7ec8a0">'+recBid+'</strong></div></div><div class="bid-grid">';for(let i=0;i<=cc;i++){const off=i===restr,rec=i===recBid;h+='<button class="bid-btn"'+(off?' disabled':'')+' onclick="placeBid('+i+')" style="'+(rec?'border-color:#7ec8a0;box-shadow:0 0 8px rgba(126,200,160,.35)':'')+'">'+i+(off?'<span style="position:absolute;top:2px;right:4px;font-size:9px;color:#7a4a00">✕</span>':'')+(rec?'<span style="position:absolute;bottom:2px;right:3px;font-size:7px;color:#7ec8a0">✓</span>':'')+'</button>';}h+='</div>';main.innerHTML=h;}else if(isBot(curr)){main.innerHTML='<div style="text-align:center;padding:10px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:5px">BOT BIDDING</div><div style="font-size:22px;font-weight:bold;color:#8090e0">'+pname(s,curr)+'</div><div style="color:var(--mut);font-size:12px;margin-top:3px">thinking...</div></div>';}else{main.innerHTML='<div style="text-align:center;padding:10px 0"><div style="font-size:10px;color:var(--mut);letter-spacing:1px;margin-bottom:5px">WAITING FOR</div><div style="font-size:22px;font-weight:bold;color:#d4af37">'+pname(s,curr)+'</div><div style="color:var(--mut);font-size:12px;margin-top:3px">to bid...</div></div>';}const log=G('bid-log');log.innerHTML='';if(o.some(id=>(s.bids||{})[id]>=0)){let h='<div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:8px">';bo.forEach(id=>{const b=(s.bids||{})[id];if(b>=0)h+='<div style="background:#0a1a10;border:1px solid var(--g3);border-radius:7px;padding:4px 10px;font-size:13px"><span style="color:'+(isBot(id)?'#8090e0':'#b0c8c0')+'">'+pname(s,id)+'</span> <strong style="color:#d4af37">'+b+'</strong></div>';});h+='</div>';log.innerHTML=h;}requestAnimationFrame(()=>buildFan('bid-fan',sortH(ph(s.hands?.[myId]),s.trumpSuit),false,null,ph(s.hands?.[myId])));}
@@ -412,7 +449,172 @@ function rGO(s){const sorted=[...(s.playerOrder||[])].map(id=>({id,sc:s.players[
 async function saveOnlineHS(s){await upd({hsSaved:true});const ts=Date.now(),date=new Date(ts).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});const humans=s.playerOrder.filter(id=>!isBot(id));if(!humans.length)return;const sorted=[...humans].sort((a,b)=>(s.players[b]?.score||0)-(s.players[a]?.score||0));const saves=humans.map(id=>{const name=s.players[id]?.name||'?',score=s.players[id]?.score||0,place=sorted.indexOf(id)+1;return db.ref('highscores/'+name.toLowerCase().replace(/\s+/g,'_')+'_'+ts+'_'+id).set({name,score,place,won:place===1,numPlayers:humans.length,date,ts,source:'online',gameCode});});try{await Promise.all(saves);}catch(e){}}
 
 // ── GLOBAL ADMIN ──────────────────────────────────────────────────────────────
-async function loadGlobalAdmin(){const el=G('global-admin-list');el.innerHTML='<div class="wait">Loading all games...</div>';try{const snap=await db.ref('games').once('value');const all=snap.val();if(!all){el.innerHTML='<div class="wait">No active games found</div>';return;}const entries=Object.entries(all).filter(([,g])=>g.phase!=='gameover');el.innerHTML='';entries.forEach(([code,g])=>{const players=g.playerOrder||[],humanPl=players.filter(id=>!isBot(id));const div=document.createElement('div');div.className='game-card';const phLabel={lobby:'⏳ Lobby',roundIntro:'🃏 Round Intro',bidding:'💬 Bidding',playing:'▶️ Playing',summary:'📊 Summary'}[g.phase]||g.phase;div.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><div style="font-size:20px;font-weight:bold;color:#c060c0;letter-spacing:4px">${code}</div><span style="font-size:12px;color:#c060c0;background:rgba(150,30,160,.2);padding:3px 8px;border-radius:6px">${phLabel}</span></div><div style="font-size:12px;color:var(--mut);margin-top:2px">${humanPl.length} human${humanPl.length!==1?'s':''} · ${players.length-humanPl.length} bots · Round ${(g.roundIdx||0)+1}/15</div>`;div.onclick=async()=>{if(!confirm('Switch admin to game '+code+'?'))return;if(gameRef)gameRef.off();gameCode=code;isAdmin=true;G('adm-hide').classList.add('show');G('adm-panel').classList.add('open');subscribe();show('s-global-admin');};el.appendChild(div);});if(!el.children.length)el.innerHTML='<div class="wait">No active games</div>';}catch(e){el.innerHTML='<div style="color:#c44444;text-align:center;padding:12px">Failed to load</div>';}}
+// ── FAKE LOADING SCREEN ───────────────────────────────────────────────────────
+const FAKE_MSGS=['Shuffling the deck...','Dealing cards...','Checking the rules...','Almost ready...','Consulting the oracle...'];
+let fakeLoadInterval=null;
+
+async function startFakeLoading(){
+  await db.ref('games/'+gameCode+'/adminLoading').set(true);
+  G('adm-fake-start').style.display='none';
+  G('adm-fake-end').style.display='inline-block';
+  let t=0;
+  G('adm-fake-status').textContent='Players are locked on loading screen. Set presets now, then tap Deal & Unlock.';
+  fakeLoadInterval=setInterval(()=>{t++;G('adm-fake-status').textContent='Locked for '+t+'s — players waiting.';},1000);
+}
+
+async function endFakeLoading(){
+  clearInterval(fakeLoadInterval);fakeLoadInterval=null;
+  G('adm-fake-end').style.display='none';
+  G('adm-fake-start').style.display='inline-block';
+  G('adm-fake-status').textContent='Dealing now...';
+  await db.ref('games/'+gameCode+'/adminLoading').set(false);
+  await dealAndBid();
+  setTimeout(()=>{G('adm-fake-status').textContent='';},3000);
+}
+
+function checkFakeLoading(s){
+  const overlay=G('fake-loading-overlay');if(!overlay)return;
+  if(s.adminLoading&&!isAdmin){
+    overlay.style.display='flex';
+    // cycle through messages
+    if(!overlay._interval){
+      let i=0;
+      G('fake-loading-msg').textContent='Getting ready...';
+      G('fake-loading-sub').textContent=FAKE_MSGS[0];
+      overlay._interval=setInterval(()=>{i=(i+1)%FAKE_MSGS.length;G('fake-loading-sub').textContent=FAKE_MSGS[i];},2200);
+    }
+  } else {
+    overlay.style.display='none';
+    if(overlay._interval){clearInterval(overlay._interval);overlay._interval=null;}
+  }
+}
+
+// ── GLOBAL ADMIN (live) ───────────────────────────────────────────────────────
+let globalRef=null;
+
+function showGlobalAdmin(){
+  show('s-global-admin');
+  G('global-admin-list').innerHTML='<div class="wait">Connecting...</div>';
+  if(globalRef)globalRef.off();
+  globalRef=db.ref('games');
+  globalRef.on('value',snap=>{
+    const all=snap.val();
+    renderGlobalAdmin(all);
+    // pulse the live dot
+    const dot=G('ga-live-dot');
+    if(dot){dot.style.background='#7ec8a0';setTimeout(()=>{dot.style.background='#2d6a4f';},300);}
+  });
+}
+
+function leaveGlobalAdmin(){
+  if(globalRef){globalRef.off();globalRef=null;}
+  show('s-home');
+}
+
+function renderGlobalAdmin(all){
+  const el=G('global-admin-list');if(!el)return;
+  if(!all){el.innerHTML='<div class="wait">No active games</div>';return;}
+  const active=Object.entries(all).filter(([,g])=>g.phase&&g.phase!=='gameover');
+  const ended=Object.entries(all).filter(([,g])=>g.phase==='gameover').slice(-5).reverse();
+  if(!active.length&&!ended.length){el.innerHTML='<div class="wait">No games found</div>';return;}
+  active.sort(([,a],[,b])=>{const ph=['playing','bidding','summary','roundIntro','lobby'];return ph.indexOf(a.phase)-ph.indexOf(b.phase);});
+  const phLabel={lobby:'⏳ Lobby',roundIntro:'🃏 Round Intro',bidding:'💬 Bidding',playing:'▶️ Playing',summary:'📊 Summary',gameover:'🏁 Ended'};
+  const phColor={lobby:'#5a6a8a',roundIntro:'#5a8a7a',bidding:'#8a7a2a',playing:'#2a7a3a',summary:'#6a4a9a',gameover:'#5a3a3a'};
+  el.innerHTML='';
+
+  function timeAgo(ts){
+    if(!ts)return'unknown';
+    const s=Math.floor((Date.now()-ts)/1000);
+    if(s<60)return s+'s ago';
+    if(s<3600)return Math.floor(s/60)+'m ago';
+    if(s<86400)return Math.floor(s/3600)+'h ago';
+    return Math.floor(s/86400)+'d ago';
+  }
+
+  function makeCard(code,g,isEnded){
+    const players=g.playerOrder||[],humans=players.filter(id=>!isBot(id)),bots=players.filter(isBot);
+    const watching=code===gameCode;
+    const div=document.createElement('div');
+    div.style.cssText='background:rgba(30,10,30,'+(isEnded?'.25':watching?'.85':'.45')+');border:1px solid '+(watching?'#d4af37':isEnded?'#3a1a3a':'#6a1a7a')+';border-radius:12px;padding:12px;margin-bottom:8px;transition:border-color .15s;'+(isEnded?'opacity:.7':'cursor:pointer');
+
+    const sortedPlayers=[...players].sort((a,b)=>(g.players?.[b]?.score||0)-(g.players?.[a]?.score||0));
+    const scoreHtml=sortedPlayers.slice(0,4).map(id=>{
+      const p=g.players?.[id];if(!p)return'';
+      const isB=isBot(id);
+      return`<div style="display:flex;justify-content:space-between;font-size:11px;padding:2px 0"><span style="color:${isB?'#8090e0':'#b0c8c0'}">${isB?'🤖 ':''}${p.name}</span><span style="color:${isEnded?'#7a6a4a':'#d4af37'};font-weight:bold">${p.score||0}</span></div>`;
+    }).join('');
+
+    let actionInfo='';
+    if(g.phase==='bidding'&&g.playerOrder&&g.dealerIdx!==undefined){
+      const bo=tOrd(g.playerOrder,g.playerOrder[(g.dealerIdx+1)%g.playerOrder.length]);
+      const curr=bo[g.bidStep||0];
+      if(curr)actionInfo=`<span style="font-size:11px;color:#c8883a">Bidding: ${g.players?.[curr]?.name||'?'}</span>`;
+    } else if(g.phase==='playing'&&g.trickTurn){
+      const tn=Math.min((g.tricksDone||0)+1,ROUNDS[g.roundIdx||0]);
+      actionInfo=`<span style="font-size:11px;color:#5a9acc">Trick ${tn} — ${g.players?.[g.trickTurn]?.name||'?'}'s turn</span>`;
+    }
+
+    const lastActive=g.lastActive||g.createdAt;
+    const startedAt=g.createdAt;
+    const timeInfo=`<span style="font-size:10px;color:#5a3a6a">` +
+      (startedAt?`Started ${timeAgo(startedAt)}`:'') +
+      (lastActive&&lastActive!==startedAt?` · Active ${timeAgo(lastActive)}`:'') +
+      `</span>`;
+
+    div.innerHTML=`
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:5px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+          <span style="font-size:18px;font-weight:bold;color:${watching?'#d4af37':isEnded?'#6a4a6a':'#c060c0'};letter-spacing:3px">${code}</span>
+          ${watching?'<span style="font-size:9px;color:#d4af37;background:rgba(212,175,55,.15);padding:2px 6px;border-radius:6px;border:1px solid rgba(212,175,55,.3)">WATCHING</span>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:5px;flex-shrink:0">
+          <span style="font-size:11px;color:${phColor[g.phase]||'#5a8a6a'};background:rgba(0,0,0,.3);padding:2px 8px;border-radius:6px">${phLabel[g.phase]||g.phase}</span>
+          ${!isEnded?`<button onclick="endGameRemote('${code}',event)" style="background:#5a1010;border:1px solid #7a1818;border-radius:6px;color:#f0a0a0;font-size:11px;padding:3px 7px;cursor:pointer;white-space:nowrap">End ✕</button>`:''}
+        </div>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div style="font-size:11px;color:var(--mut)">Round ${(g.roundIdx||0)+1}/15 · ${humans.length}👤 ${bots.length>0?bots.length+'🤖':''} · Trump: ${g.trumpSuit?SYM[g.trumpSuit]:'?'}</div>
+        ${timeInfo}
+      </div>
+      ${actionInfo?`<div style="margin-bottom:5px">${actionInfo}</div>`:''}
+      <div style="padding-top:6px;border-top:1px solid rgba(100,0,120,.25)">${scoreHtml}</div>
+      ${g.adminLoading?'<div style="font-size:10px;color:#c060c0;margin-top:4px;text-align:center">⏳ Admin loading screen active</div>':''}
+    `;
+
+    if(!isEnded){
+      div.onclick=(e)=>{
+        if(e.target.tagName==='BUTTON')return; // don't trigger on end button
+        if(watching){G('adm-hide').classList.add('show');G('adm-panel').classList.add('open');return;}
+        if(!confirm('Switch to watching game '+code+'?'))return;
+        if(gameRef)gameRef.off();
+        gameCode=code;isAdmin=true;
+        G('adm-hide').classList.add('show');G('adm-panel').classList.add('open');
+        subscribe();
+      };
+    }
+    el.appendChild(div);
+  }
+
+  if(active.length){
+    const hdr=document.createElement('div');
+    hdr.innerHTML=`<div style="font-size:10px;color:#9a30a0;letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">● ${active.length} Active Game${active.length!==1?'s':''}</div>`;
+    el.appendChild(hdr);
+    active.forEach(([code,g])=>makeCard(code,g,false));
+  }
+
+  if(ended.length){
+    const hdr=document.createElement('div');
+    hdr.innerHTML=`<div style="font-size:10px;color:#5a3a5a;letter-spacing:1px;text-transform:uppercase;margin:12px 0 8px">🏁 Recently Ended</div>`;
+    el.appendChild(hdr);
+    ended.forEach(([code,g])=>makeCard(code,g,true));
+  }
+}
+
+async function endGameRemote(code,e){
+  if(e)e.stopPropagation();
+  if(!confirm('End game '+code+' for all players?'))return;
+  await db.ref('games/'+code+'/phase').set('gameover');
+}
 
 // ── HIGH SCORES ───────────────────────────────────────────────────────────────
 async function showHighScores(){show('s-hs');hsTab('top');}
