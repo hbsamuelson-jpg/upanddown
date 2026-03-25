@@ -1677,7 +1677,7 @@ function confirmIRLLeave(){if(confirm('Leave this game?'))show('s-home');}
 
 // ── ACCESS KEY ────────────────────────────────────────────────────────────────
 (function(){
-  const SECRET='RIVER2025'; // change this to lock everyone out and force re-entry
+  const SECRET='TWERP'; // change this to lock everyone out and force re-entry
   const params=new URLSearchParams(window.location.search);
   const stored=()=>{try{return localStorage.getItem('udtr_access');}catch(e){return null;}};
   const save=()=>{try{localStorage.setItem('udtr_access',SECRET);}catch(e){}};
