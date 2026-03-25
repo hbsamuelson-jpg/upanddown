@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -407,7 +406,11 @@ body.plat-desktop .cp-c .cv{font-size:12px;}
       Sign in with Google
     </button>
     <div id="signin-err" style="color:#c44444;font-size:13px;text-align:center;margin-top:14px;min-height:18px"></div>
-    <div id="signin-loading" style="display:none;color:#5a8a6a;font-size:13px;margin-top:14px">Signing in...</div>
+    <div id="signin-loading" style="display:flex;color:#5a8a6a;font-size:13px;margin-top:14px;justify-content:center;align-items:center;gap:8px">
+      <div style="width:8px;height:8px;border-radius:50%;background:#5a8a6a;animation:fld .9s infinite 0s"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#5a8a6a;animation:fld .9s infinite .3s"></div>
+      <div style="width:8px;height:8px;border-radius:50%;background:#5a8a6a;animation:fld .9s infinite .6s"></div>
+    </div>
   </div>
 </div>
 
@@ -531,20 +534,31 @@ function signInWithGoogle() {
   btn.style.display = 'none';
   loading.style.display = 'block';
   err.textContent = '';
-  auth.signInWithPopup(googleProvider).catch(e => {
+  auth.signInWithRedirect(googleProvider).catch(e => {
     btn.style.display = 'flex';
     loading.style.display = 'none';
-    err.textContent = 'Sign-in failed. Please try again.';
+    err.textContent = 'Sign-in failed: ' + e.message;
   });
 }
 
 auth.onAuthStateChanged(user => {
   if (!user) {
-    // Not signed in — show sign in screen, hide everything else
-    document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
-    document.getElementById('s-signin').classList.add('on');
-    document.getElementById('google-signin-btn').style.display = 'flex';
-    document.getElementById('signin-loading').style.display = 'none';
+    // Check if we're returning from a redirect
+    auth.getRedirectResult().then(result => {
+      if (!result.user) {
+        // Not signed in — show sign in screen
+        document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+        document.getElementById('s-signin').classList.add('on');
+        document.getElementById('google-signin-btn').style.display = 'flex';
+        document.getElementById('signin-loading').style.display = 'none';
+      }
+    }).catch(e => {
+      document.querySelectorAll('.scr').forEach(s => s.classList.remove('on'));
+      document.getElementById('s-signin').classList.add('on');
+      document.getElementById('google-signin-btn').style.display = 'flex';
+      document.getElementById('signin-loading').style.display = 'none';
+      document.getElementById('signin-err').textContent = 'Error: ' + e.message;
+    });
     return;
   }
   // Blocked account — full screen Momo redirect
