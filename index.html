@@ -629,7 +629,7 @@ function checkIfKicked(gameState) {
 }
 // ─────────────────────────────────────────────────────────────
 
-let _taps=0x0,_tapTimer=null;async function secretTap(){/* disabled */}_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;const _0x1bbd64=prompt('');if(!_0x1bbd64)return;try{const _0x47d67f=await db['ref'](_0xf31650(0x56c))[_0xf31650(0x842)](_0xf31650(0x805)),_0x2cfca0=_0x47d67f['val']();_0x2cfca0&&btoa(_0x1bbd64[_0xf31650(0x351)+_0xf31650(0x49f)]())===_0x2cfca0&&(isAdmin=!![],G('adm-hide')[_0xf31650(0x841)+'t']['add'](_0xf31650(0x227)),G(_0xf31650(0x69c)+'l')[_0xf31650(0x841)+'t']['add'](_0xf31650(0x458)),updateAdminPanel(gs));}catch(_0x3b8d4e){}}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
+let _taps=0x0,_tapTimer=null;async function secretTap(){/* disabled */}_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;const _0x1bbd64=prompt('');if(!_0x1bbd64)return;try{const _0x47d67f=await db['ref'](_0x5f5a7e(0x56c))[_0x5f5a7e(0x842)](_0x5f5a7e(0x805)),_0x2cfca0=_0x47d67f['val']();_0x2cfca0&&btoa(_0x1bbd64[_0x5f5a7e(0x351)+_0x5f5a7e(0x49f)]())===_0x2cfca0&&(isAdmin=!![],G('adm-hide')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x227)),G(_0x5f5a7e(0x69c)+'l')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x458)),updateAdminPanel(gs));}catch(_0x3b8d4e){}}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
 const IRL_SAVE_KEY = 'irlGames';
 
 async function irlSaveProgress() {
@@ -695,8 +695,9 @@ window.irlGameOver = function() {
 };
 
 // Replace irlShowContinue with Firebase-backed version
+const _irlShowContinueOrig = window.irlShowContinue || irlShowContinue;
 window.irlShowContinue = async function() {
-  show('s-irl-continue');
+  _irlShowContinueOrig(); // builds the form (player inputs, round selector, etc.) and shows the screen
   const saved = await irlLoadSavedGames();
   const entries = Object.entries(saved)
     .filter(([,v]) => !v.finished)
