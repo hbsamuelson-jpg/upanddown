@@ -629,7 +629,7 @@ function checkIfKicked(gameState) {
 }
 // ─────────────────────────────────────────────────────────────
 
-let _taps=0x0,_tapTimer=null;async function secretTap(){_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;const _0x1bbd64=prompt('');if(!_0x1bbd64)return;try{const _0x47d67f=await db['ref'](_0x5f5a7e(0x56c))[_0x5f5a7e(0x842)](_0x5f5a7e(0x805)),_0x2cfca0=_0x47d67f['val']();_0x2cfca0&&btoa(_0x1bbd64[_0x5f5a7e(0x351)+_0x5f5a7e(0x49f)]())===_0x2cfca0&&(isAdmin=!![],G('adm-hide')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x227)),G(_0x5f5a7e(0x69c)+'l')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x458)),updateAdminPanel(gs));}catch(_0x3b8d4e){}}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
+let _taps=0x0,_tapTimer=null;function secretTap(){_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;var _pw=prompt('');if(!_pw)return;(async function(){try{var snap=await db.ref('admin_pw').once('value');var stored=snap.val();if(stored&&btoa(_pw.trim().toLowerCase())===stored){isAdmin=true;document.getElementById('adm-hide').classList.add('show');document.getElementById('adm-panel').classList.add('open');updateAdminPanel(gs);}}catch(e){}})();}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
 const IRL_SAVE_KEY = 'irlGames';
 
 async function irlSaveProgress() {
