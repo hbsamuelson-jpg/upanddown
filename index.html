@@ -629,7 +629,7 @@ function checkIfKicked(gameState) {
 }
 // ─────────────────────────────────────────────────────────────
 
-let _taps=0x0,_tapTimer=null;async function secretTap(){_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;const _0x1bbd64=prompt('');if(!_0x1bbd64)return;try{const _0x47d67f=await db['ref'](_0x5f5a7e(0x56c))[_0x5f5a7e(0x842)](_0x5f5a7e(0x805)),_0x2cfca0=_0x47d67f['val']();_0x2cfca0&&btoa(_0x1bbd64[_0x5f5a7e(0x351)+_0x5f5a7e(0x49f)]())===_0x2cfca0&&(isAdmin=!![],G('adm-hide')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x227)),G(_0x5f5a7e(0x69c)+'l')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x458)),updateAdminPanel(gs));}catch(_0x3b8d4e){}}}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
+let _taps=0x0,_tapTimer=null;async function secretTap(){_taps++,clearTimeout(_tapTimer),_tapTimer=setTimeout(()=>_taps=0x0,0x7d0);if(_taps>=0x5){_taps=0x0;const _0x1bbd64=prompt('');if(!_0x1bbd64)return;try{const _0x47d67f=await db['ref'](_0x5f5a7e(0x56c))[_0x5f5a7e(0x842)](_0x5f5a7e(0x805)),_0x2cfca0=_0x47d67f['val']();_0x2cfca0&&btoa(_0x1bbd64[_0x5f5a7e(0x351)+_0x5f5a7e(0x49f)]())===_0x2cfca0&&(isAdmin=!![],G('adm-hide')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x227)),G(_0x5f5a7e(0x69c)+'l')[_0x5f5a7e(0x841)+'t']['add'](_0x5f5a7e(0x458)),updateAdminPanel(gs));}catch(_0x3b8d4e){}}}// ── IRL AUTO-SAVE / RESUME ───────────────────────────────────
 const IRL_SAVE_KEY = 'irlGames';
 
 async function irlSaveProgress() {
@@ -666,7 +666,7 @@ let irlCount=0x4,irlPlayers=[],irlScores=[],irlRoundIdx=0x0,irlDealerIdx=0x0,irl
 <!-- IRL AUTO-SAVE PATCH -->
 <script>
 // Patch irlStartGame to assign a save ID and auto-save
-const _irlStartGameOrig = window.irlStartGame;
+const _irlStartGameOrig = window.irlStartGame || irlStartGame;
 window.irlStartGame = function() {
   _irlStartGameOrig();
   irlSaveId = 'irl_' + Date.now();
@@ -674,30 +674,32 @@ window.irlStartGame = function() {
 };
 
 // Patch irlFinishRound to auto-save after each round
-const _irlFinishRoundOrig = window.irlFinishRound;
+const _irlFinishRoundOrig = window.irlFinishRound || irlFinishRound;
 window.irlFinishRound = function() {
   _irlFinishRoundOrig();
   irlSaveProgress();
 };
 
 // Patch irlNextRound to auto-save
-const _irlNextRoundOrig = window.irlNextRound;
+const _irlNextRoundOrig = window.irlNextRound || irlNextRound;
 window.irlNextRound = function() {
   _irlNextRoundOrig();
   irlSaveProgress();
 };
 
 // Patch irlGameOver to mark finished
-const _irlGameOverOrig = window.irlGameOver;
+const _irlGameOverOrig = window.irlGameOver || irlGameOver;
 window.irlGameOver = function() {
   _irlGameOverOrig();
   irlMarkFinished();
 };
 
 // Replace irlShowContinue with Firebase-backed version
-const _irlShowContinueOrig = window.irlShowContinue;
 window.irlShowContinue = async function() {
-  _irlShowContinueOrig(); // builds the form (player inputs, round selector, etc.) and shows the screen
+  // Call original: resets counts, builds the form UI, and shows the screen
+  irlContCount = 4; irlContRound = 0; irlContDealer = 0;
+  buildIRLContScreen();
+  show('s-irl-continue');
   const saved = await irlLoadSavedGames();
   const entries = Object.entries(saved)
     .filter(([,v]) => !v.finished)
