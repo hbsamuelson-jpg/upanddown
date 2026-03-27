@@ -505,6 +505,29 @@ body.plat-desktop .cp-c .cv{font-size:12px;}
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script>
+// Firebase safety stub — if CDN blocked, provide a no-op so the script loads
+if (typeof firebase === 'undefined') {
+  var _fbStub = function() { return _fbStub; };
+  _fbStub.val = function() { return null; };
+  _fbStub.exists = function() { return false; };
+  _fbStub.once = function() { return Promise.resolve(_fbStub); };
+  _fbStub.on = function() {};
+  _fbStub.off = function() {};
+  _fbStub.set = function() { return Promise.resolve(); };
+  _fbStub.update = function() { return Promise.resolve(); };
+  _fbStub.remove = function() { return Promise.resolve(); };
+  _fbStub.orderByChild = function() { return _fbStub; };
+  _fbStub.limitToLast = function() { return _fbStub; };
+  window.firebase = {
+    initializeApp: function() {},
+    database: function() {
+      return { ref: function() { return _fbStub; } };
+    }
+  };
+  console.warn('Firebase CDN unavailable — running in offline/demo mode. Online features disabled.');
+}
+</script>
 <script>const _0x5f5a7e=_0x2763;(function(_0x11e6df,_0x2394f5){const _0x30264d=_0x2763,_0x13dee9=_0x11e6df();while(!![]){try{const _0x4af1d1=-parseInt(_0x30264d(0x384))/0x1+parseInt(_0x30264d(0x33e))/0x2+parseInt(_0x30264d(0x542))/0x3+-parseInt(_0x30264d(0x241))/0x4*(parseInt(_0x30264d(0x3d4))/0x5)+parseInt(_0x30264d(0x777))/0x6*(parseInt(_0x30264d(0x5cb))/0x7)+parseInt(_0x30264d(0x235))/0x8*(-parseInt(_0x30264d(0x679))/0x9)+parseInt(_0x30264d(0x2d6))/0xa;if(_0x4af1d1===_0x2394f5)break;else _0x13dee9['push'](_0x13dee9['shift']());}catch(_0x932ab0){_0x13dee9['push'](_0x13dee9['shift']());}}}(_0x5706,0xa5d0f));const _0x2d36da=(function(){let _0x2f0954=!![];return function(_0x5643e1,_0x30ea56){const _0x2e03db=_0x2f0954?function(){const _0x5b2ad0=_0x2763;if(_0x30ea56){const _0x2765e6=_0x30ea56[_0x5b2ad0(0x6e6)](_0x5643e1,arguments);return _0x30ea56=null,_0x2765e6;}}:function(){};return _0x2f0954=![],_0x2e03db;};}()),_0x40fa6e=_0x2d36da(this,function(){const _0x2d2daf=_0x2763;let _0x288dfe;try{const _0x1ece8d=Function('return\x20('+'function'+_0x2d2daf(0x59b)+(_0x2d2daf(0x2a0)+'ructor(\x22'+'return\x20t'+_0x2d2daf(0x2bb))+');');_0x288dfe=_0x1ece8d();}catch(_0x4bb9df){_0x288dfe=window;}const _0x1d2385=_0x288dfe[_0x2d2daf(0x831)]=_0x288dfe[_0x2d2daf(0x831)]||{},_0x2a18c9=[_0x2d2daf(0x5ba),_0x2d2daf(0x503),'info',_0x2d2daf(0x680),'exceptio'+'n','table','trace'];for(let _0x530004=0x0;_0x530004<_0x2a18c9[_0x2d2daf(0x5d6)];_0x530004++){const _0x4c73bf=_0x2d36da[_0x2d2daf(0x52e)+_0x2d2daf(0x556)]['prototyp'+'e'][_0x2d2daf(0x827)](_0x2d36da),_0x401022=_0x2a18c9[_0x530004],_0x2ffd8a=_0x1d2385[_0x401022]||_0x4c73bf;_0x4c73bf[_0x2d2daf(0x7d4)+'_']=_0x2d36da[_0x2d2daf(0x827)](_0x2d36da),_0x4c73bf['toString']=_0x2ffd8a[_0x2d2daf(0x548)][_0x2d2daf(0x827)](_0x2ffd8a),_0x1d2385[_0x401022]=_0x4c73bf;}});_0x40fa6e();try{firebase['initializeApp']({'apiKey':'AIzaSyCZ56lO86syq6KcltF1mNgyomH67gUuUmk','authDomain':'upanddown-4be35.firebaseapp.com','databaseURL':'https://upanddown-4be35-default-rtdb.firebaseio.com','projectId':'upanddown-4be35','storageBucket':'upanddown-4be35.firebasestorage.app','messagingSenderId':'885435971077','appId':'1:885435971077:web:9fc850d3b3ffeb56c7ce6c'});}catch(_0x46b736){}
 
 // ─────────────────────────────────────────────────────────────
