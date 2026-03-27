@@ -920,5 +920,148 @@ body.plat-desktop .cp-c .cv{font-size:12px;}
 })();
 </script>
 
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   1. REMOVE DEVTOOLS BLOCKER
+      - Spoof outerWidth/outerHeight so the size-check interval never fires
+      - Guard document.body.innerHTML from being replaced with the "Close
+        developer tools" message
+   2. BID BACK BUTTON
+      - Visible only while the player immediately after you is still deciding
+      - Disappears once bidStep advances past myBidPos + 1
+══════════════════════════════════════════════════════════════ */
+
+/* ── 1a. Defeat the outerWidth/outerHeight devtools check ── */
+try {
+  Object.defineProperty(window, 'outerWidth',  { get: function(){ return window.innerWidth;  }, configurable: true });
+  Object.defineProperty(window, 'outerHeight', { get: function(){ return window.innerHeight; }, configurable: true });
+} catch(e) {}
+
+/* ── 1b. Block the body.innerHTML wipe ── */
+(function(){
+  var _bodyInnerHTMLDesc = Object.getOwnPropertyDescriptor(Element.prototype, 'innerHTML');
+  try {
+    Object.defineProperty(document.body, 'innerHTML', {
+      set: function(val) {
+        if (typeof val === 'string' && val.indexOf('developer') !== -1 && val.indexOf('tools') !== -1) return;
+        _bodyInnerHTMLDesc.set.call(this, val);
+      },
+      get: function() { return _bodyInnerHTMLDesc.get.call(this); },
+      configurable: true
+    });
+  } catch(e) {}
+})();
+
+/* ── 1c. Restore devtools keyboard shortcuts (F12, Ctrl+Shift+I/J/C/K/U) ── */
+/* The obfuscated keydown handler was registered with capture:true.
+   We add our own capture listener on window (higher up in the DOM) that
+   marks devtools keys as allowed before the blocker can prevent them. */
+window.addEventListener('keydown', function(e) {
+  var k = (e.key || '').toUpperCase();
+  var ctrl = e.ctrlKey || e.metaKey;
+  var shift = e.shiftKey;
+  if (k === 'F12' || (ctrl && shift && ['I','J','C','K'].indexOf(k) !== -1) || (ctrl && k === 'U')) {
+    e.stopImmediatePropagation();
+    // re-fire a clean, non-cancelled version so the browser handles it
+    var clean = new KeyboardEvent('keydown', {
+      key: e.key, code: e.code, keyCode: e.keyCode,
+      ctrlKey: e.ctrlKey, shiftKey: e.shiftKey, metaKey: e.metaKey,
+      bubbles: false, cancelable: false
+    });
+    // Can't truly re-open devtools via JS, but at least we stop the blocker
+    // from calling preventDefault/stopPropagation on the original event.
+  }
+}, true);
+
+/* ══════════════════════════════════════════════════════════
+   2. BID BACK BUTTON
+   ══════════════════════════════════════════════════════════ */
+(function(){
+  /* Undo my bid: roll bidStep back by 1 and clear my bid */
+  window._undoBid = async function() {
+    try {
+      var state = window.gs;
+      if (!state || state.phase !== 'bidding') return;
+      var playerOrder = state.playerOrder || [];
+      var n = playerOrder.length;
+      var bidOrder = tOrd(playerOrder, playerOrder[(state.dealerIdx + 1) % n]);
+      var myBidPos = bidOrder.indexOf(myId);
+      if (myBidPos < 0) return;
+      // Only allow undo when bidStep is exactly myBidPos+1
+      if (state.bidStep !== myBidPos + 1) return;
+      if ((state.bids || {})[myId] < 0) return; // already cleared
+
+      await upd({
+        bidStep: myBidPos,
+        ['bids/' + myId]: -1
+      });
+    } catch(e) { console.warn('_undoBid error:', e); }
+  };
+
+  /* Patch rBid to inject the back button after the original renders */
+  var _origRBid = window.rBid;
+  if (typeof _origRBid !== 'function') return;
+
+  window.rBid = function(state) {
+    _origRBid(state);
+
+    try {
+      if (!state || state.phase !== 'bidding') return;
+      var playerOrder = state.playerOrder || [];
+      var n = playerOrder.length;
+      if (n === 0) return;
+
+      var bidOrder = tOrd(playerOrder, playerOrder[(state.dealerIdx + 1) % n]);
+      var currentBidder = bidOrder[state.bidStep];
+      var myBidPos = bidOrder.indexOf(myId);
+
+      // Show back button only when:
+      // - I have already bid (bids[myId] >= 0)
+      // - bidStep is exactly myBidPos + 1 (the person right after me is currently bidding)
+      // - It's not currently my turn
+      var myBid = (state.bids || {})[myId];
+      var showBack = (
+        myBidPos >= 0 &&
+        myBid >= 0 &&
+        state.bidStep === myBidPos + 1 &&
+        currentBidder !== myId
+      );
+
+      if (!showBack) return;
+
+      // Find the bid-main container and prepend the back button
+      var bidMain = document.getElementById('bid-main');
+      if (!bidMain) return;
+
+      // Don't double-inject
+      if (document.getElementById('_bid-back-btn')) return;
+
+      var btn = document.createElement('button');
+      btn.id = '_bid-back-btn';
+      btn.textContent = '← Change My Bid';
+      btn.style.cssText = [
+        'display:block',
+        'margin:0 auto 12px auto',
+        'padding:8px 20px',
+        'font-size:14px',
+        'background:transparent',
+        'border:1px solid #6a4a7a',
+        'border-radius:8px',
+        'color:#c0a0d0',
+        'cursor:pointer',
+        'letter-spacing:0.5px'
+      ].join(';');
+      btn.onmouseover = function(){ this.style.background='rgba(106,74,122,0.3)'; };
+      btn.onmouseout  = function(){ this.style.background='transparent'; };
+      btn.onclick = function(){ window._undoBid(); };
+
+      bidMain.insertBefore(btn, bidMain.firstChild);
+    } catch(e) { console.warn('rBid patch error:', e); }
+  };
+
+})();
+</script>
+
 </body>
 </html>
