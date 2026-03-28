@@ -745,62 +745,62 @@ body.plat-desktop .cp-c .cv{font-size:12px;}
     } catch (e) { alert('Action failed.'); }
   };
 
-  /* ─── Patch updateAdminPanel to inject kick section ──── */
-  var _origUAP = updateAdminPanel;
-  window.updateAdminPanel = function (state) {
-    _origUAP(state);
+  /* ─── Admin panel refresh — poll gs every 1s ─────────── */
+  /* Replaces the updateAdminPanel patch (obfuscated code calls  */
+  /* updateAdminPanel via closure, not window.updateAdminPanel)  */
+  setInterval(function () {
+    if (!window.isAdmin || !window.gs || !window.gameCode) return;
     _injectKickSection();
     _refreshKickList();
-  };
+  }, 1000);
 
-  /* ─── Patch render — detect kick/ban ─────────────────── */
-  var _origRender = render;
+  /* ─── Kicked/banned detection — poll gs every 500ms ──── */
+  /* Replaces the render patch for the same reason           */
   var _wasInGame = false;
+  setInterval(function () {
+    var state = window.gs;
+    if (!state || !window.gameCode || window.isAdmin) return;
 
-  window.render = function (state) {
-    if (state && !isAdmin) {
-      // Detect kick
-      if (state.kicked && state.kicked[myId]) {
+    // Detect kick
+    if (state.kicked && state.kicked[myId]) {
+      sessionStorage.removeItem('udtr_code');
+      try { if (window.gameRef) window.gameRef.off(); } catch (e) {}
+      window.gs = {};
+      window.gameCode = '';
+      _wasInGame = false;
+      alert('You have been removed from this game by the host.');
+      show('s-home');
+      return;
+    }
+    // Detect ban
+    if (state.banned && state.banned[myId]) {
+      sessionStorage.removeItem('udtr_code');
+      try { if (window.gameRef) window.gameRef.off(); } catch (e) {}
+      window.gs = {};
+      window.gameCode = '';
+      _wasInGame = false;
+      alert('You have been banned from this game by the host.');
+      show('s-home');
+      return;
+    }
+    // Detect silent removal from playerOrder mid-game
+    if (state.phase && state.phase !== 'lobby' && state.phase !== 'gameover') {
+      if (_wasInGame && state.playerOrder &&
+          state.playerOrder.indexOf(myId) === -1) {
         sessionStorage.removeItem('udtr_code');
         try { if (window.gameRef) window.gameRef.off(); } catch (e) {}
         window.gs = {};
         window.gameCode = '';
         _wasInGame = false;
-        alert('You have been removed from this game by the host.');
+        alert('You have been removed from this game.');
         show('s-home');
         return;
       }
-      // Detect ban
-      if (state.banned && state.banned[myId]) {
-        sessionStorage.removeItem('udtr_code');
-        try { if (window.gameRef) window.gameRef.off(); } catch (e) {}
-        window.gs = {};
-        window.gameCode = '';
-        _wasInGame = false;
-        alert('You have been banned from this game by the host.');
-        show('s-home');
-        return;
-      }
-      // Detect silent removal from playerOrder mid-game
-      if (state.phase && state.phase !== 'lobby' && state.phase !== 'gameover') {
-        if (_wasInGame && state.playerOrder &&
-            state.playerOrder.indexOf(myId) === -1) {
-          sessionStorage.removeItem('udtr_code');
-          try { if (window.gameRef) window.gameRef.off(); } catch (e) {}
-          window.gs = {};
-          window.gameCode = '';
-          _wasInGame = false;
-          alert('You have been removed from this game.');
-          show('s-home');
-          return;
-        }
-        if (state.playerOrder && state.playerOrder.indexOf(myId) !== -1) {
-          _wasInGame = true;
-        }
+      if (state.playerOrder && state.playerOrder.indexOf(myId) !== -1) {
+        _wasInGame = true;
       }
     }
-    _origRender(state);
-  };
+  }, 500);
 
   /* ─── Admin panel MutationObserver — keep kick fresh ─── */
   var panel = document.getElementById('adm-panel');
